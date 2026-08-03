@@ -376,7 +376,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // --- Your Google Apps Script Web App URL. This lets the site check
     //     which dates are already booked, and record new bookings. ---
-    const BOOKINGS_API_URL = 'https://script.google.com/macros/s/AKfycbwVBa_xcdWElqx5T1ynu-ntbcYaVbKnZ7o4cD8qLx5_jFB9h1vm5RIKGl_e3OcrNjM8/exec';
+    const BOOKINGS_API_URL = 'https://script.google.com/macros/s/AKfycby6dY7x71_1-2GQ5GmhgK9bTehY2xXRw4m-kQJJ-AqIhqxK1cubauwqF5l-_9kltkyh/exec';
 
     const bookingFormFields = document.getElementById('bookingFormFields');
     const paymentStep = document.getElementById('paymentStep');
