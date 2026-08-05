@@ -2973,7 +2973,7 @@ img{
 
 body{
     font-family:'Poppins', 'Work Sans', sans-serif;
-    font-weight:300;
+    font-weight:500;
 }
 
 h1, h2, h3, h4{
@@ -3378,6 +3378,7 @@ h1, h2, h3, h4{
 }
 
 .appt-cal-day{
+    position:relative;
     aspect-ratio:1/1;
     display:flex;
     align-items:center;
@@ -3389,6 +3390,21 @@ h1, h2, h3, h4{
     color:#3A2624;
     cursor:pointer;
     transition:.2s;
+}
+
+.appt-cal-day-off-tag{
+    position:absolute;
+    bottom:-3px;
+    left:50%;
+    transform:translateX(-50%);
+    font-size:7px;
+    font-weight:700;
+    letter-spacing:.2px;
+    color:#fff;
+    background:#7A1E32;
+    padding:1px 4px;
+    border-radius:5px;
+    line-height:1.4;
 }
 
 .appt-cal-day:hover:not(:disabled):not(.appt-cal-day--empty){
@@ -3688,6 +3704,8 @@ h1, h2, h3, h4{
     font-size:13.5px;
     color:#8A6E60;
     padding:50px 10px;
+
+    font-weight:600;
 }
 
 .admin-booking-table{
@@ -3724,6 +3742,8 @@ h1, h2, h3, h4{
     color:#8A6E60;
     font-style:italic;
     max-width:220px;
+
+    font-weight:600;
 }
 
 @media(max-width:640px){
@@ -4033,6 +4053,8 @@ h1, h2, h3, h4{
     font-size:15px;
     color:#7B6F67;
     max-width:440px;
+
+    font-weight:600;
 }
 
 #adminDashboardModal .admin-dash-actions{
@@ -4108,6 +4130,8 @@ h1, h2, h3, h4{
     color:#7B6F67;
     text-transform:uppercase;
     letter-spacing:.4px;
+
+    font-weight:600;
 }
 
 .admin-counter-pending .admin-counter-num{ color:#B7791F; }
@@ -4146,6 +4170,8 @@ h1, h2, h3, h4{
     font-size:13.5px;
     background:#fff;
     transition:border-color .2s ease, box-shadow .2s ease;
+
+    font-weight:600;
 }
 
 #adminDashboardModal .admin-toolbar select,
@@ -4205,6 +4231,8 @@ h1, h2, h3, h4{
     color:#2C2C2C;
     border-bottom:1px solid #F1EAE3;
     vertical-align:middle;
+
+    font-weight:600;
 }
 
 .admin-booking-table tbody tr:nth-child(even){
@@ -4238,6 +4266,7 @@ h1, h2, h3, h4{
     overflow:hidden;
     text-overflow:ellipsis;
     white-space:nowrap;
+    font-weight:600;
 }
 
 /* status badges */
@@ -4351,6 +4380,8 @@ h1, h2, h3, h4{
     font-family:'Poppins', sans-serif;
     font-size:14px;
     max-width:320px;
+
+    font-weight:600;
 }
 
 @media(max-width:900px){
@@ -4377,6 +4408,460 @@ h1, h2, h3, h4{
 
     #adminDashboardModal .admin-dash-head h2{
         font-size:26px;
+    }
+
+}
+
+
+/* ===============================
+   OFF-TODAY BANNER (site-wide, customer-facing)
+================================= */
+
+.off-today-banner{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:8px;
+    background:#7A1E32;
+    color:#fff;
+    font-family:'Poppins', sans-serif;
+    font-size:13px;
+    font-weight:500;
+    padding:10px 16px;
+    text-align:center;
+    position:relative;
+    z-index:1000;
+}
+
+.off-today-banner svg{
+    flex-shrink:0;
+    color:#F0D9C4;
+}
+
+/* ===============================
+   ADMIN DASHBOARD: view tabs + calendar view
+================================= */
+
+.admin-view-tabs{
+    display:inline-flex;
+    background:#F7F3EF;
+    border:1px solid #E8DDD6;
+    border-radius:12px;
+    padding:4px;
+    gap:4px;
+    margin-bottom:18px;
+}
+
+.admin-view-tab{
+    border:none;
+    background:none;
+    padding:9px 18px;
+    border-radius:9px;
+    font-family:'Poppins', sans-serif;
+    font-size:13px;
+    font-weight:600;
+    color:#7B6F67;
+    cursor:pointer;
+    transition:.2s ease;
+}
+
+.admin-view-tab.is-active{
+    background:#fff;
+    color:#7A203A;
+    box-shadow:0 2px 8px rgba(0,0,0,.08);
+}
+
+.admin-view-tab:hover:not(.is-active){
+    color:#3A2624;
+}
+
+.admin-calendar-view{
+    display:grid;
+    grid-template-columns:1fr 340px;
+    gap:20px;
+    border:1px solid #E8DDD6;
+    border-radius:16px;
+    padding:24px;
+    max-height:60vh;
+    overflow:auto;
+}
+
+.admin-cal-nav{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    margin-bottom:16px;
+    font-family:'Playfair Display', serif;
+    font-weight:600;
+    font-size:17px;
+    color:#2C2C2C;
+}
+
+.admin-cal-nav button{
+    width:32px;
+    height:32px;
+    border-radius:50%;
+    border:1px solid #E8DDD6;
+    background:#fff;
+    color:#7A203A;
+    font-size:17px;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    transition:.2s;
+}
+
+.admin-cal-nav button:hover{
+    background:#7A203A;
+    color:#fff;
+}
+
+.admin-cal-weekdays{
+    display:grid;
+    grid-template-columns:repeat(7,1fr);
+    text-align:center;
+    font-family:'Poppins', sans-serif;
+    font-size:12px;
+    font-weight:600;
+    color:#B8824F;
+    margin-bottom:8px;
+}
+
+.admin-cal-grid{
+    display:grid;
+    grid-template-columns:repeat(7,1fr);
+    gap:6px;
+}
+
+.admin-cal-day{
+    position:relative;
+    min-height:64px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    gap:3px;
+    font-family:'Poppins', sans-serif;
+    font-size:13px;
+    border-radius:10px;
+    border:1.5px solid transparent;
+    background:#FBF7F3;
+    color:#2C2C2C;
+    cursor:pointer;
+    transition:.2s ease;
+    padding:6px 4px;
+}
+
+.admin-cal-day--empty{
+    min-height:64px;
+}
+
+.admin-cal-day:hover{
+    border-color:#7A203A;
+}
+
+.admin-cal-day--empty{
+    visibility:hidden;
+    cursor:default;
+}
+
+.admin-cal-day--today{
+    font-weight:700;
+    box-shadow:inset 0 0 0 1.5px #D8A25A;
+}
+
+.admin-cal-day--selected{
+    background:#7A203A;
+    color:#fff;
+}
+
+.admin-cal-day-count{
+    font-size:9.5px;
+    font-weight:600;
+    color:#2F855A;
+    line-height:1.2;
+    text-align:center;
+}
+
+.admin-cal-day--selected .admin-cal-day-count{
+    color:#C6F6D5;
+}
+
+.admin-cal-day-off-tag{
+    position:absolute;
+    top:2px;
+    right:2px;
+    font-size:7px;
+    font-weight:700;
+    letter-spacing:.3px;
+    color:#C0392B;
+    background:#FEE2E2;
+    padding:1px 3px;
+    border-radius:4px;
+}
+
+.admin-cal-day--selected .admin-cal-day-off-tag{
+    background:#fff;
+}
+
+.admin-cal-legend{
+    display:flex;
+    align-items:center;
+    gap:6px;
+    margin-top:16px;
+    font-family:'Poppins', sans-serif;
+    font-size:11.5px;
+    color:#7B6F67;
+}
+
+.admin-cal-legend-dot{
+    width:8px;
+    height:8px;
+    border-radius:50%;
+    display:inline-block;
+    margin-left:10px;
+}
+
+.admin-cal-legend-dot:first-of-type{ margin-left:0; }
+
+.admin-cal-legend-booked{ background:#2F855A; }
+.admin-cal-legend-off{ background:#C0392B; }
+
+/* day detail side panel */
+.admin-cal-detail{
+    border-left:1px solid #E8DDD6;
+    padding-left:20px;
+}
+
+.admin-cal-detail-empty{
+    font-family:'Poppins', sans-serif;
+    font-size:13px;
+    color:#7B6F67;
+    padding-top:12px;
+
+    font-weight:600;
+}
+
+.admin-cal-detail-date{
+    font-family:'Playfair Display', serif;
+    font-size:19px;
+    font-weight:700;
+    margin-bottom:14px;
+}
+
+.admin-cal-off-btn{
+    width:100%;
+    padding:10px 14px;
+    border-radius:10px;
+    font-family:'Poppins', sans-serif;
+    font-size:13px;
+    font-weight:600;
+    cursor:pointer;
+    margin-bottom:18px;
+    transition:.2s ease;
+}
+
+.admin-cal-off-btn.is-off{
+    background:#FEE2E2;
+    border:1.5px solid #C0392B;
+    color:#C0392B;
+}
+
+.admin-cal-off-btn.is-off:hover{
+    background:#C0392B;
+    color:#fff;
+}
+
+.admin-cal-off-btn.is-on{
+    background:#FDF3EC;
+    border:1.5px solid #E8DDD6;
+    color:#7A203A;
+}
+
+.admin-cal-off-btn.is-on:hover{
+    border-color:#7A203A;
+}
+
+.admin-cal-booking-item{
+    padding:10px 0;
+    border-bottom:1px solid #F1EAE3;
+    font-family:'Poppins', sans-serif;
+}
+
+.admin-cal-booking-item:last-child{
+    border-bottom:none;
+}
+
+.admin-cal-booking-time{
+    font-weight:700;
+    color:#7A203A;
+    font-size:13px;
+}
+
+.admin-cal-booking-name{
+    font-size:13px;
+    color:#2C2C2C;
+    margin-top:2px;
+}
+
+.admin-cal-booking-service{
+    font-size:12px;
+    color:#7B6F67;
+}
+
+.admin-cal-detail-empty-day{
+    font-family:'Poppins', sans-serif;
+    font-size:13px;
+    color:#7B6F67;
+    font-style:italic;
+    padding:10px 0;
+}
+
+@media(max-width:768px){
+
+    .admin-calendar-view{
+        grid-template-columns:1fr;
+    }
+
+    .admin-cal-detail{
+        border-left:none;
+        border-top:1px solid #E8DDD6;
+        padding-left:0;
+        padding-top:16px;
+    }
+
+}
+
+
+/* ===============================
+   APPOINTMENT PICKER: location card (map + address + directions)
+================================= */
+
+.appt-location-card{
+    display:grid;
+    grid-template-columns:200px 1fr;
+    gap:18px;
+    margin-top:18px;
+    padding-top:18px;
+    border-top:1px solid #F1E1D3;
+    align-items:stretch;
+}
+
+.appt-location-visuals{
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+}
+
+.appt-location-map{
+    border-radius:12px;
+    overflow:hidden;
+    border:1px solid #E8D5C4;
+    height:100px;
+}
+
+.appt-location-map iframe{
+    width:100%;
+    height:100%;
+    border:0;
+    display:block;
+}
+
+.appt-location-photo{
+    border-radius:12px;
+    overflow:hidden;
+    border:1px solid #E8D5C4;
+    height:100px;
+    position:relative;
+    cursor:pointer;
+}
+
+.appt-location-photo img{
+    width:100%;
+    height:100%;
+    object-fit:cover;
+    display:block;
+    transition:transform .35s ease;
+}
+
+.appt-location-photo:hover img{
+    transform:scale(1.08);
+}
+
+.appt-location-photo::after{
+    content:"🔍";
+    position:absolute;
+    bottom:6px;
+    right:6px;
+    width:22px;
+    height:22px;
+    background:rgba(0,0,0,.55);
+    color:#fff;
+    border-radius:50%;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:11px;
+    pointer-events:none;
+}
+
+.lightbox-overlay.single-image .lightbox-nav{
+    display:none;
+}
+
+.appt-location-info{
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+}
+
+.appt-location-info h4{
+    font-size:14px;
+    margin-bottom:8px;
+}
+
+.appt-location-address{
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+    color:#7A1E32;
+    font-weight:600;
+    font-size:13.5px;
+    width:fit-content;
+    margin-bottom:8px;
+    transition:.2s;
+}
+
+.appt-location-address:hover{
+    color:#5E1626;
+    text-decoration:underline;
+}
+
+.appt-location-address svg{
+    flex-shrink:0;
+}
+
+.appt-location-directions{
+    font-size:13px;
+    color:#5C4038;
+    line-height:1.6;
+    margin:0;
+}
+
+@media(max-width:600px){
+
+    .appt-location-card{
+        grid-template-columns:1fr;
+    }
+
+    .appt-location-visuals{
+        flex-direction:row;
+    }
+
+    .appt-location-map,
+    .appt-location-photo{
+        height:110px;
     }
 
 }

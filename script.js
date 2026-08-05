@@ -259,6 +259,27 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function closeLightbox() {
         lightboxOverlay.classList.remove('open');
+        lightboxOverlay.classList.remove('single-image');
+    }
+
+    // For standalone single photos (no prev/next), like the shop's
+    // location street-view image -- reuses the same zoom overlay.
+    function openSingleImageLightbox(src) {
+
+        lightboxImage.src = src;
+        lightboxOverlay.classList.add('open');
+        lightboxOverlay.classList.add('single-image');
+
+    }
+
+    const apptLocationPhoto = document.querySelector('.appt-location-photo img');
+
+    if (apptLocationPhoto) {
+
+        apptLocationPhoto.addEventListener('click', function () {
+            openSingleImageLightbox(apptLocationPhoto.getAttribute('src'));
+        });
+
     }
 
     function showLightboxPhoto(step) {
@@ -413,6 +434,13 @@ document.addEventListener('DOMContentLoaded', function () {
             snapshot.forEach(function (doc) { blockedDates.push(doc.id); });
             renderApptCalendar();
 
+            // Off days are just a heads-up sign now, not a hard block --
+            // only show the banner if TODAY specifically is marked off.
+            const offBanner = document.getElementById('offTodayBanner');
+            if (offBanner) {
+                offBanner.style.display = blockedDates.indexOf(getTodayStr()) !== -1 ? 'flex' : 'none';
+            }
+
         }).catch(function () {
             blockedDates = [];
         });
@@ -537,12 +565,21 @@ document.addEventListener('DOMContentLoaded', function () {
             btn.textContent = day;
 
             const isPast = cellDate < todayDate;
-            const isBlocked = blockedDates.indexOf(cellStr) !== -1;
+            const isOff = blockedDates.indexOf(cellStr) !== -1;
 
-            if (isPast || isBlocked) {
+            if (isPast) {
                 btn.disabled = true;
             } else {
                 btn.addEventListener('click', function () { selectApptDate(cellStr); });
+            }
+
+            if (isOff && !isPast) {
+
+                const offTag = document.createElement('span');
+                offTag.className = 'appt-cal-day-off-tag';
+                offTag.textContent = 'OFF';
+                btn.appendChild(offTag);
+
             }
 
             if (cellStr === dateToStr(todayDate)) {
@@ -580,6 +617,16 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
         apptSlotsDate.textContent = formatDateLabel(selectedApptDate);
+
+        // Off days show up as a heads-up tag on the calendar, but no
+        // time slots are offered for that date -- pick another day.
+        if (blockedDates.indexOf(selectedApptDate) !== -1) {
+
+            apptSlotsList.innerHTML =
+                '<p class="appt-slots-empty">We\'re closed on this date. Please choose another day on the calendar.</p>';
+            return;
+
+        }
 
         const isToday = selectedApptDate === getTodayStr();
         const nowMinutes = todayDate.getTime() === new Date().setHours(0, 0, 0, 0) ? (new Date().getHours() * 60 + new Date().getMinutes()) : 0;
@@ -729,9 +776,20 @@ document.addEventListener('DOMContentLoaded', function () {
             return;
         }
 
-        // Someone else may have booked this slot while the form was open --
-        // re-check against the sheet one last time before taking payment.
-        if (blockedDates.indexOf(date) !== -1 || bookedSlots.indexOf(date + '|' + time) !== -1) {
+        // Safety re-check right before payment -- the date may have been
+        // marked off, or someone else may have booked this slot, since
+        // the picker was first opened.
+        if (blockedDates.indexOf(date) !== -1) {
+
+            alert('Sorry, we\'re closed on that date. Please pick another day.');
+
+            bookingFormFields.style.display = 'none';
+            resetApptPicker();
+            return;
+
+        }
+
+        if (bookedSlots.indexOf(date + '|' + time) !== -1) {
 
             alert('Sorry, that slot was just taken. Please pick another date or time.');
 
@@ -1349,6 +1407,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function openDashboard() {
         openAdminOverlay(adminDashboardModal);
+        switchAdminView('table');
         loadBookingLog();
     }
 
@@ -1864,6 +1923,214 @@ document.addEventListener('DOMContentLoaded', function () {
     [adminSearchInput, adminFilterStatus, adminFilterService].forEach(function (el) {
         if (el) el.addEventListener('input', renderBookingTable);
     });
+
+    // ===============================
+    // ADMIN CALENDAR VIEW -- see every booked date/time at a glance,
+    // and mark/unmark "off" days (shown as a heads-up sign on the site,
+    // but customers can still book those dates).
+    // ===============================
+
+    const adminTabTable = document.getElementById('adminTabTable');
+    const adminTabCalendar = document.getElementById('adminTabCalendar');
+    const adminToolbar = document.getElementById('adminToolbar');
+    const adminCalendarView = document.getElementById('adminCalendarView');
+    const adminDashCalGrid = document.getElementById('adminDashCalGrid');
+    const adminDashCalMonthLabel = document.getElementById('adminDashCalMonthLabel');
+    const adminDashCalPrev = document.getElementById('adminDashCalPrev');
+    const adminDashCalNext = document.getElementById('adminDashCalNext');
+    const adminDashCalDetail = document.getElementById('adminDashCalDetail');
+
+    let adminOffDates = [];
+    let adminCalYear = new Date().getFullYear();
+    let adminCalMonth = new Date().getMonth();
+    let adminCalSelectedDate = null;
+
+    function switchAdminView(view) {
+
+        const showCalendar = view === 'calendar';
+
+        adminTabTable.classList.toggle('is-active', !showCalendar);
+        adminTabCalendar.classList.toggle('is-active', showCalendar);
+
+        adminToolbar.style.display = showCalendar ? 'none' : 'flex';
+        adminDashBody.style.display = showCalendar ? 'none' : 'block';
+        adminCalendarView.style.display = showCalendar ? 'grid' : 'none';
+
+        if (showCalendar) loadAdminOffDates();
+
+    }
+
+    if (adminTabTable) adminTabTable.addEventListener('click', function () { switchAdminView('table'); });
+    if (adminTabCalendar) adminTabCalendar.addEventListener('click', function () { switchAdminView('calendar'); });
+
+    function loadAdminOffDates() {
+
+        if (!window.db) return;
+
+        window.db.collection('blockedDates').get().then(function (snapshot) {
+
+            adminOffDates = [];
+            snapshot.forEach(function (doc) { adminOffDates.push(doc.id); });
+            renderAdminCalendar();
+
+        }).catch(function () {
+            adminOffDates = [];
+            renderAdminCalendar();
+        });
+
+    }
+
+    function adminDateToStr(y, m, d) {
+        return y + '-' + String(m + 1).padStart(2, '0') + '-' + String(d).padStart(2, '0');
+    }
+
+    function renderAdminCalendar() {
+
+        if (!adminDashCalGrid) return;
+
+        const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+        adminDashCalMonthLabel.textContent = monthNames[adminCalMonth] + ' ' + adminCalYear;
+
+        const firstOfMonth = new Date(adminCalYear, adminCalMonth, 1);
+        const startWeekday = firstOfMonth.getDay();
+        const daysInMonth = new Date(adminCalYear, adminCalMonth + 1, 0).getDate();
+        const todayStr = adminDateToStr(new Date().getFullYear(), new Date().getMonth(), new Date().getDate());
+
+        adminDashCalGrid.innerHTML = '';
+
+        for (let i = 0; i < startWeekday; i++) {
+            const blank = document.createElement('span');
+            blank.className = 'admin-cal-day admin-cal-day--empty';
+            adminDashCalGrid.appendChild(blank);
+        }
+
+        for (let day = 1; day <= daysInMonth; day++) {
+
+            const cellStr = adminDateToStr(adminCalYear, adminCalMonth, day);
+            const dayBookings = allBookings.filter(function (b) { return b.date === cellStr; });
+            const isOff = adminOffDates.indexOf(cellStr) !== -1;
+
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'admin-cal-day';
+
+            const dayNum = document.createElement('span');
+            dayNum.textContent = day;
+            btn.appendChild(dayNum);
+
+            if (dayBookings.length) {
+                const countLabel = document.createElement('span');
+                countLabel.className = 'admin-cal-day-count';
+                countLabel.textContent = dayBookings.length + (dayBookings.length === 1 ? ' booking' : ' bookings');
+                btn.appendChild(countLabel);
+            }
+
+            if (isOff) {
+                const tag = document.createElement('span');
+                tag.className = 'admin-cal-day-off-tag';
+                tag.textContent = 'OFF';
+                btn.appendChild(tag);
+            }
+
+            if (cellStr === todayStr) btn.classList.add('admin-cal-day--today');
+            if (cellStr === adminCalSelectedDate) btn.classList.add('admin-cal-day--selected');
+
+            btn.addEventListener('click', function () {
+                adminCalSelectedDate = cellStr;
+                renderAdminCalendar();
+                renderAdminCalDetail(cellStr, dayBookings, isOff);
+            });
+
+            adminDashCalGrid.appendChild(btn);
+
+        }
+
+    }
+
+    function renderAdminCalDetail(dateStr, dayBookings, isOff) {
+
+        if (!adminDashCalDetail) return;
+
+        let html = '<p class="admin-cal-detail-date">' + formatBookingDate(dateStr) + '</p>';
+
+        html += '<button type="button" class="admin-cal-off-btn ' + (isOff ? 'is-off' : 'is-on') + '" id="adminCalOffToggle">' +
+            (isOff ? 'Remove OFF for this date' : 'Mark this date as OFF') +
+            '</button>';
+
+        if (dayBookings.length) {
+
+            dayBookings
+                .slice()
+                .sort(function (a, b) { return a.time < b.time ? -1 : 1; })
+                .forEach(function (b) {
+
+                    html += '<div class="admin-cal-booking-item">' +
+                        '<div class="admin-cal-booking-time">' + formatBookingTime(b.time) + '</div>' +
+                        '<div class="admin-cal-booking-name">' + b.name + '</div>' +
+                        '<div class="admin-cal-booking-service">' + b.service + '</div>' +
+                        '</div>';
+
+                });
+
+        } else {
+
+            html += '<p class="admin-cal-detail-empty-day">No bookings on this date.</p>';
+
+        }
+
+        adminDashCalDetail.innerHTML = html;
+
+        document.getElementById('adminCalOffToggle').addEventListener('click', function () {
+            toggleOffDate(dateStr, isOff);
+        });
+
+    }
+
+    function toggleOffDate(dateStr, currentlyOff) {
+
+        if (!window.db) return;
+
+        const ref = window.db.collection('blockedDates').doc(dateStr);
+        const action = currentlyOff ? ref.delete() : ref.set({ off: true });
+
+        action.then(function () {
+
+            if (currentlyOff) {
+                adminOffDates = adminOffDates.filter(function (d) { return d !== dateStr; });
+            } else {
+                adminOffDates.push(dateStr);
+            }
+
+            renderAdminCalendar();
+
+            const dayBookings = allBookings.filter(function (b) { return b.date === dateStr; });
+            renderAdminCalDetail(dateStr, dayBookings, !currentlyOff);
+
+        }).catch(function () {
+            alert('Could not update this date. Please try again.');
+        });
+
+    }
+
+    if (adminDashCalPrev) {
+
+        adminDashCalPrev.addEventListener('click', function () {
+            adminCalMonth--;
+            if (adminCalMonth < 0) { adminCalMonth = 11; adminCalYear--; }
+            renderAdminCalendar();
+        });
+
+    }
+
+    if (adminDashCalNext) {
+
+        adminDashCalNext.addEventListener('click', function () {
+            adminCalMonth++;
+            if (adminCalMonth > 11) { adminCalMonth = 0; adminCalYear++; }
+            renderAdminCalendar();
+        });
+
+    }
 
 
     if (headerAdminBtn) {

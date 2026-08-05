@@ -23,6 +23,14 @@
 
 <body>
 
+    <!-- Shown only when today has been marked as an off day in the
+         Admin -> Calendar view. Booking still works -- this is just a
+         heads-up, not a block. -->
+    <div class="off-today-banner" id="offTodayBanner" style="display:none;">
+        <svg viewBox="0 0 24 24" width="15" height="15"><path fill="none" stroke="currentColor" stroke-width="1.6" d="M12 8v5m0 3h.01"/><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>
+        <span>We're OFF today — you can still book ahead for another date.</span>
+    </div>
+
     <!-- ===========================
             DECORATIVE BACKGROUND (gold leaf line-art)
     ============================ -->
@@ -710,6 +718,43 @@
 
                         </div>
 
+                        <div class="appt-location-card">
+
+                            <div class="appt-location-visuals">
+
+                                <div class="appt-location-map">
+                                    <iframe
+                                        src="https://www.google.com/maps?q=14.5530742,121.115012&z=17&output=embed"
+                                        loading="lazy"
+                                        referrerpolicy="no-referrer-when-downgrade"
+                                        title="Nail X Taytay location map">
+                                    </iframe>
+                                </div>
+
+                                <div class="appt-location-photo">
+                                    <img src="images/shop-street-view.jpg" alt="Street view near Nail X Taytay">
+                                </div>
+
+                            </div>
+
+                            <div class="appt-location-info">
+
+                                <h4>Our Location</h4>
+
+                                <a href="https://www.google.com/maps/search/?api=1&query=14.5530742,121.115012" target="_blank" rel="noopener" class="appt-location-address">
+                                    <svg viewBox="0 0 24 24" width="15" height="15"><path fill="currentColor" d="M12 2a7 7 0 0 0-7 7c0 5.25 7 13 7 13s7-7.75 7-13a7 7 0 0 0-7-7zm0 9.5A2.5 2.5 0 1 1 12 6.5a2.5 2.5 0 0 1 0 5z"/></svg>
+                                    Poland, Santa Ana, Taytay, 1920 Rizal
+                                </a>
+
+                                <p class="appt-location-directions">
+                                    Look for the <strong>berm side</strong> road — you'll see our
+                                    <strong>Nail X Taytay</strong> sign at the very end.
+                                </p>
+
+                            </div>
+
+                        </div>
+
                     </div>
 
                     <div id="bookingFormFields" style="display:none;">
@@ -918,7 +963,12 @@
                 </div>
             </div>
 
-            <div class="admin-toolbar">
+            <div class="admin-view-tabs">
+                <button type="button" id="adminTabTable" class="admin-view-tab is-active">Table View</button>
+                <button type="button" id="adminTabCalendar" class="admin-view-tab">Calendar View</button>
+            </div>
+
+            <div class="admin-toolbar" id="adminToolbar">
 
                 <div class="admin-search-wrap">
                     <svg viewBox="0 0 24 24" width="15" height="15"><circle cx="11" cy="11" r="7" fill="none" stroke="currentColor" stroke-width="1.6"/><path stroke="currentColor" stroke-width="1.6" d="m21 21-4.3-4.3"/></svg>
@@ -939,6 +989,37 @@
 
             <div class="admin-dash-body" id="adminDashBody">
                 <p class="admin-dash-status" id="adminDashStatus">Loading bookings…</p>
+            </div>
+
+            <div class="admin-calendar-view" id="adminCalendarView" style="display:none;">
+
+                <div class="admin-cal-panel">
+
+                    <div class="admin-cal-nav">
+                        <button type="button" id="adminDashCalPrev" aria-label="Previous month">‹</button>
+                        <span id="adminDashCalMonthLabel">August 2026</span>
+                        <button type="button" id="adminDashCalNext" aria-label="Next month">›</button>
+                    </div>
+
+                    <div class="admin-cal-weekdays">
+                        <span>S</span><span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span>
+                    </div>
+
+                    <div class="admin-cal-grid" id="adminDashCalGrid"></div>
+
+                    <p class="admin-cal-legend">
+                        <span class="admin-cal-legend-dot admin-cal-legend-booked"></span> Has bookings
+                        <span class="admin-cal-legend-dot admin-cal-legend-off"></span> Marked OFF
+                    </p>
+
+                </div>
+
+                <div class="admin-cal-detail" id="adminDashCalDetail">
+
+                    <p class="admin-cal-detail-empty">Click a date on the calendar to see its bookings and set it as an off day.</p>
+
+                </div>
+
             </div>
 
         </div>
