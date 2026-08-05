@@ -16,7 +16,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,500;1,600&family=Petit+Formal+Script&family=Work+Sans:wght@300;400;500;600&display=swap"
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,500;1,600&family=Petit+Formal+Script&family=Work+Sans:wght@300;400;500;600&family=Poppins:wght@300;400;500;600;700&display=swap"
         rel="stylesheet">
 
 </head>
@@ -120,6 +120,11 @@
 
         </nav>
 
+        <button type="button" id="headerAdminBtn" class="header-admin-btn" style="display:none;" title="Admin Dashboard">
+            <svg viewBox="0 0 24 24" width="16" height="16"><path fill="none" stroke="currentColor" stroke-width="1.5" d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zm0 2c-4 0-8 2-8 5v1h16v-1c0-3-4-5-8-5z"/></svg>
+            <span>Admin</span>
+        </button>
+
     </header>
 
     <!-- ===========================
@@ -127,6 +132,11 @@
     ============================ -->
 
     <div class="hero-bg-wrapper">
+
+    <div class="hero-blur-layer" aria-hidden="true"></div>
+    <div class="luxury-glow luxury-glow-1" aria-hidden="true"></div>
+    <div class="luxury-glow luxury-glow-2" aria-hidden="true"></div>
+    <div class="hero-particles" id="heroParticles" aria-hidden="true"></div>
 
     <section class="hero" id="home">
 
@@ -562,6 +572,10 @@
 
         <div class="footer-bottom">
             <p>&copy; 2026 Nail X Taytay. All rights reserved.</p>
+            <button type="button" id="adminEntryBtn" class="admin-entry-link">
+                <svg viewBox="0 0 24 24" width="12" height="12"><path fill="currentColor" d="M7 10V7a5 5 0 0 1 10 0v3h1a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1v-9a1 1 0 0 1 1-1h1zm2 0h6V7a3 3 0 0 0-6 0v3z"/></svg>
+                Admin
+            </button>
         </div>
 
     </footer>
@@ -658,7 +672,47 @@
 
                 <form id="bookingForm">
 
-                    <div id="bookingFormFields">
+                    <!-- Step 0: pick a date + time, Google Calendar appointment-scheduling style -->
+                    <div id="apptPickerStep" class="appt-picker">
+
+                        <div class="appt-picker-head">
+                            <h3>Select an Appointment Time</h3>
+                            <p>Pick an available date, then choose a time slot.</p>
+                        </div>
+
+                        <div class="appt-picker-body">
+
+                            <div class="appt-calendar">
+
+                                <div class="appt-cal-nav">
+                                    <button type="button" id="apptCalPrev" aria-label="Previous month">‹</button>
+                                    <span id="apptCalMonthLabel">August 2026</span>
+                                    <button type="button" id="apptCalNext" aria-label="Next month">›</button>
+                                </div>
+
+                                <div class="appt-cal-weekdays">
+                                    <span>S</span><span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span>
+                                </div>
+
+                                <div class="appt-cal-grid" id="apptCalGrid"></div>
+
+                            </div>
+
+                            <div class="appt-slots">
+
+                                <p class="appt-slots-date" id="apptSlotsDate">Select a date</p>
+
+                                <div class="appt-slots-list" id="apptSlotsList">
+                                    <p class="appt-slots-empty">Choose a date on the calendar to see open times.</p>
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                    <div id="bookingFormFields" style="display:none;">
 
                     <label>Service</label>
                     <div class="input-icon-wrap">
@@ -678,37 +732,16 @@
                         <input type="tel" id="bookingContact" placeholder="09XXXXXXXXX" inputmode="numeric" pattern="09[0-9]{9}" maxlength="11" title="Enter an 11-digit PH mobile number starting with 09" required>
                     </div>
 
-                    <div class="form-row">
-
-                        <div>
-                            <label>Select Date</label>
-                            <div class="input-icon-wrap">
-                                <svg viewBox="0 0 24 24" width="16" height="16"><path fill="none" stroke="currentColor" stroke-width="1.5" d="M4 5h16v15H4z"/><path fill="none" stroke="currentColor" stroke-width="1.5" d="M4 9h16M8 3v4M16 3v4"/></svg>
-                                <input type="date" id="bookingDate" required>
-                            </div>
+                    <div class="appt-chosen-summary" id="apptChosenSummary">
+                        <div class="appt-chosen-info">
+                            <svg viewBox="0 0 24 24" width="18" height="18"><path fill="none" stroke="currentColor" stroke-width="1.5" d="M4 5h16v15H4z"/><path fill="none" stroke="currentColor" stroke-width="1.5" d="M4 9h16M8 3v4M16 3v4"/></svg>
+                            <span id="apptChosenText">No date/time selected yet</span>
                         </div>
-
-                        <div>
-                            <label>Select Time</label>
-                            <div class="input-icon-wrap">
-                                <svg viewBox="0 0 24 24" width="16" height="16"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.5"/><path fill="none" stroke="currentColor" stroke-width="1.5" d="M12 7v5l4 2"/></svg>
-                                <select id="bookingTime" required>
-                                    <option value="" disabled selected>Select time</option>
-                                    <option value="06:00">6:00 AM</option>
-                                    <option value="08:00">8:00 AM</option>
-                                    <option value="10:00">10:00 AM</option>
-                                    <option value="12:00">12:00 PM</option>
-                                    <option value="14:00">2:00 PM</option>
-                                    <option value="16:00">4:00 PM</option>
-                                    <option value="18:00">6:00 PM</option>
-                                    <option value="20:00">8:00 PM</option>
-                                    <option value="22:00">10:00 PM</option>
-                                    <option value="00:00">12:00 AM</option>
-                                </select>
-                            </div>
-                        </div>
-
+                        <button type="button" class="appt-change-btn" id="apptChangeBtn">Change</button>
                     </div>
+
+                    <input type="hidden" id="bookingDate" required>
+                    <input type="hidden" id="bookingTime" required>
 
                     <label>Notes / Design Inspiration (Optional)</label>
                     <div class="input-icon-wrap textarea-wrap">
@@ -791,6 +824,157 @@
         </div>
 
     </div>
+
+    <!-- ===========================
+            ADMIN SIGN-IN MODAL
+    ============================ -->
+
+    <div class="modal-overlay admin-overlay" id="adminLoginModal">
+
+        <div class="admin-box">
+
+            <button class="modal-close" id="adminLoginClose" aria-label="Close">&times;</button>
+
+            <div class="admin-box-head">
+                <div class="admin-lock-icon">
+                    <svg viewBox="0 0 24 24" width="22" height="22"><path fill="currentColor" d="M7 10V7a5 5 0 0 1 10 0v3h1a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1v-9a1 1 0 0 1 1-1h1zm2 0h6V7a3 3 0 0 0-6 0v3z"/></svg>
+                </div>
+                <h2>Admin Sign In</h2>
+                <p>For Nail X Taytay staff only.</p>
+            </div>
+
+            <form id="adminLoginForm">
+
+                <label>Email</label>
+                <div class="input-icon-wrap">
+                    <svg viewBox="0 0 24 24" width="16" height="16"><path fill="none" stroke="currentColor" stroke-width="1.5" d="M3 6h18v12H3z"/><path fill="none" stroke="currentColor" stroke-width="1.5" d="m3 7 9 6 9-6"/></svg>
+                    <input type="email" id="adminEmailInput" placeholder="you@example.com" required autocomplete="username">
+                </div>
+
+                <label>Password</label>
+                <div class="input-icon-wrap password-wrap">
+                    <svg viewBox="0 0 24 24" width="16" height="16"><path fill="none" stroke="currentColor" stroke-width="1.5" d="M7 10V7a5 5 0 0 1 10 0v3h1a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1v-9a1 1 0 0 1 1-1h1z"/></svg>
+                    <input type="password" id="adminPasswordInput" placeholder="Enter admin password" required autocomplete="current-password">
+                    <button type="button" class="admin-pw-toggle" id="adminPwToggle" aria-label="Show password">
+                        <svg id="adminPwEyeOpen" viewBox="0 0 24 24" width="18" height="18"><path fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>
+                        <svg id="adminPwEyeClosed" viewBox="0 0 24 24" width="18" height="18" style="display:none;"><path fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" d="M3 3l18 18M10.6 10.6a3 3 0 0 0 4.24 4.24M9.9 5.1A10.9 10.9 0 0 1 12 5c6.5 0 10 7 10 7a13.5 13.5 0 0 1-3.15 4.15M6.5 6.6C4 8.3 2 12 2 12a13.4 13.4 0 0 0 4.4 5.3"/></svg>
+                    </button>
+                </div>
+
+                <p class="admin-error" id="adminLoginError">Incorrect email or password. Please try again.</p>
+
+                <button type="submit" class="btn-primary admin-submit-btn">Sign In</button>
+
+            </form>
+
+        </div>
+
+    </div>
+
+    <!-- ===========================
+            ADMIN DASHBOARD MODAL (booking log)
+    ============================ -->
+
+    <div class="modal-overlay admin-overlay" id="adminDashboardModal">
+
+        <div class="admin-box admin-dashboard-box">
+
+            <button class="modal-close" id="adminDashboardClose" aria-label="Close">&times;</button>
+
+            <div class="admin-dash-head">
+                <div>
+                    <h2>Booking Log</h2>
+                    <p>View and manage all appointment requests submitted through the website.</p>
+                </div>
+                <div class="admin-dash-actions">
+                    <button type="button" id="adminRefreshBtn" class="admin-action-btn admin-action-outline">
+                        <svg viewBox="0 0 24 24" width="15" height="15"><path fill="none" stroke="currentColor" stroke-width="1.5" d="M4 4v6h6M20 20v-6h-6"/><path fill="none" stroke="currentColor" stroke-width="1.5" d="M4.5 15a8 8 0 0 0 14.5 3M19.5 9A8 8 0 0 0 5 6"/></svg>
+                        Refresh
+                    </button>
+                    <button type="button" id="adminExportBtn" class="admin-action-btn admin-action-outline">
+                        <svg viewBox="0 0 24 24" width="15" height="15"><path fill="none" stroke="currentColor" stroke-width="1.5" d="M12 3v12m0 0 4-4m-4 4-4-4"/><path fill="none" stroke="currentColor" stroke-width="1.5" d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>
+                        Export CSV
+                    </button>
+                    <button type="button" id="adminLogoutBtn" class="admin-action-btn admin-action-solid">Sign Out</button>
+                </div>
+            </div>
+
+            <div class="admin-dash-counters" id="adminDashCounters">
+                <div class="admin-counter">
+                    <span class="admin-counter-num" id="countTotal">0</span>
+                    <span class="admin-counter-label">Total Bookings</span>
+                </div>
+                <div class="admin-counter admin-counter-pending">
+                    <span class="admin-counter-num" id="countPending">0</span>
+                    <span class="admin-counter-label">Pending</span>
+                </div>
+                <div class="admin-counter admin-counter-done">
+                    <span class="admin-counter-num" id="countDone">0</span>
+                    <span class="admin-counter-label">Done</span>
+                </div>
+                <div class="admin-counter admin-counter-revenue">
+                    <span class="admin-counter-num" id="countRevenue">₱0</span>
+                    <span class="admin-counter-label">Total Revenue</span>
+                </div>
+            </div>
+
+            <div class="admin-toolbar">
+
+                <div class="admin-search-wrap">
+                    <svg viewBox="0 0 24 24" width="15" height="15"><circle cx="11" cy="11" r="7" fill="none" stroke="currentColor" stroke-width="1.6"/><path stroke="currentColor" stroke-width="1.6" d="m21 21-4.3-4.3"/></svg>
+                    <input type="text" id="adminSearchInput" placeholder="Search appointments…">
+                </div>
+
+                <select id="adminFilterStatus">
+                    <option value="">All</option>
+                    <option value="Pending">Pending</option>
+                    <option value="Done">Done</option>
+                </select>
+
+                <select id="adminFilterService">
+                    <option value="">All Services</option>
+                </select>
+
+            </div>
+
+            <div class="admin-dash-body" id="adminDashBody">
+                <p class="admin-dash-status" id="adminDashStatus">Loading bookings…</p>
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- ===========================
+            FIREBASE (bookings + admin login)
+            Fill in your own project's config below -- see
+            firebase-setup-guide.txt for step-by-step instructions.
+    ============================ -->
+
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+    <script>
+        // --- PASTE YOUR OWN FIREBASE PROJECT CONFIG HERE ---
+        // (Firebase Console -> Project settings -> Your apps -> SDK setup and config)
+        const firebaseConfig = {
+            apiKey: "AIzaSyAN6FzSg1fjDBQbzKoeegb185psnw-spu4",
+            authDomain: "nail-x-taytay.firebaseapp.com",
+            projectId: "nail-x-taytay",
+            storageBucket: "nail-x-taytay.firebasestorage.app",
+            messagingSenderId: "75741935585",
+            appId: "1:75741935585:web:b0c575cbec373789df04a0"
+        };
+
+        if (firebaseConfig.apiKey !== "YOUR_API_KEY") {
+            firebase.initializeApp(firebaseConfig);
+            window.auth = firebase.auth();
+            window.db = firebase.firestore();
+        } else {
+            console.warn('Firebase config not set yet -- see firebase-setup-guide.txt');
+        }
+    </script>
 
     <script src="script.js"></script>
 

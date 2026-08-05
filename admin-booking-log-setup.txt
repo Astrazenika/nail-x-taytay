@@ -1,0 +1,107 @@
+HOW TO ADD THE "BOOKING LOG" ENDPOINT TO YOUR GOOGLE APPS SCRIPT
+==================================================================
+
+Your website's Admin Dashboard needs your Apps Script to return the full
+list of bookings when it's called with ?action=list. Your script already
+handles the plain GET request (for bookedSlots/blockedDates) and the POST
+request (for saving a new booking) -- you just need to add one more
+branch to your existing doGet(e) function.
+
+STEP 1 — Open your Apps Script project
+---------------------------------------
+Go to https://script.google.com, open the project connected to your
+Nail X Taytay booking sheet (the one whose /exec URL is used in script.js
+as BOOKINGS_API_URL).
+
+STEP 2 — Find your doGet(e) function
+--------------------------------------
+It currently probably looks something like this (yours may differ
+slightly depending on how it was originally built):
+
+    function doGet(e) {
+      var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('Bookings');
+      var data = sheet.getDataRange().getValues();
+      // ... builds bookedSlots + blockedDates and returns them
+    }
+
+STEP 3 — Add this near the top of doGet(e)
+---------------------------------------------
+Add this as the FIRST thing inside doGet(e), before your existing logic,
+so it only takes over when the site specifically asks for the log:
+
+    function doGet(e) {
+
+      var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('Bookings');
+
+      // NEW: admin dashboard asking for the full booking log
+      if (e.parameter.action === 'list') {
+
+        var rows = sheet.getDataRange().getValues();
+        var headers = rows[0]; // first row = column headers
+        var bookings = [];
+
+        // Adjust these column names if your sheet's header row uses
+        // different labels. This assumes headers like:
+        // Service | Name | Contact | Date | Time | Notes
+        var col = {};
+        headers.forEach(function (h, i) { col[String(h).trim().toLowerCase()] = i; });
+
+        for (var r = 1; r < rows.length; r++) {
+
+          var row = rows[r];
+          if (!row[col['date']]) continue; // skip blank rows
+
+          var rawDate = row[col['date']];
+          var dateStr = rawDate instanceof Date
+            ? Utilities.formatDate(rawDate, Session.getScriptTimeZone(), 'yyyy-MM-dd')
+            : String(rawDate);
+
+          bookings.push({
+            date: dateStr,
+            time: String(row[col['time']] || ''),
+            name: String(row[col['name']] || ''),
+            contact: String(row[col['contact']] || ''),
+            service: String(row[col['service']] || ''),
+            notes: String(row[col['notes']] || '')
+          });
+
+        }
+
+        return ContentService
+          .createTextOutput(JSON.stringify({ bookings: bookings }))
+          .setMimeType(ContentService.MimeType.JSON);
+
+      }
+
+      // ... your existing bookedSlots/blockedDates logic stays exactly
+      //     as it is below this point ...
+
+    }
+
+STEP 4 — Re-deploy
+---------------------
+Apps Script Web Apps don't update live until you re-deploy:
+  Deploy -> Manage deployments -> pick your existing deployment ->
+  click the pencil (Edit) -> Version: "New version" -> Deploy.
+
+(Re-using the SAME deployment, just as a new version, keeps your
+/exec URL exactly the same, so you don't need to change anything in
+script.js.)
+
+STEP 5 — Test it
+-------------------
+Visit this in your browser (paste your real URL in):
+
+  https://script.google.com/macros/s/XXXXXXX/exec?action=list
+
+You should see JSON like:
+
+  {"bookings":[{"date":"2026-08-10","time":"10:00","name":"Maria Santos", ...}]}
+
+If your sheet's header row uses different column names than
+"Service / Name / Contact / Date / Time / Notes", just update the
+lowercase names inside col['...'] in Step 3 to match your actual
+headers exactly (lowercase, no extra spaces).
+
+That's it — once this is live, the "Admin" link in your site's footer
+will show the real booking log.
