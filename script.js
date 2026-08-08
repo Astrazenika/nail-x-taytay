@@ -164,6 +164,53 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     // ===============================
+    // MOBILE NAV: hamburger toggle
+    // ===============================
+
+    const navToggle = document.getElementById('navToggle');
+    const navbar = document.querySelector('.navbar');
+
+    if (navToggle && navbar) {
+
+        navToggle.addEventListener('click', function () {
+
+            const isOpen = navbar.classList.toggle('open');
+            navToggle.classList.toggle('open', isOpen);
+            navToggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+
+        });
+
+        // Close the menu once a link is tapped
+        navbar.querySelectorAll('a').forEach(function (link) {
+
+            link.addEventListener('click', function () {
+
+                navbar.classList.remove('open');
+                navToggle.classList.remove('open');
+                navToggle.setAttribute('aria-expanded', 'false');
+
+            });
+
+        });
+
+        // Close the menu when tapping anywhere outside it
+        document.addEventListener('click', function (e) {
+
+            const clickedInsideNav = navbar.contains(e.target) || navToggle.contains(e.target);
+
+            if (!clickedInsideNav && navbar.classList.contains('open')) {
+
+                navbar.classList.remove('open');
+                navToggle.classList.remove('open');
+                navToggle.setAttribute('aria-expanded', 'false');
+
+            }
+
+        });
+
+    }
+
+    // ===============================
     // GALLERY: random preview + full gallery modal
     // ===============================
 
