@@ -34,6 +34,10 @@ document.addEventListener('DOMContentLoaded', function () {
     // straight line after "View All Services" is pressed.
     let circlesUnlocked = false;
 
+    // Which service the customer wants -- set by clicking a service card,
+    // used once they finish picking a date/time on the homepage calendar.
+    let pendingServiceIndex = 0;
+
     function formatPrice(price) {
         return price === null ? 'Price may vary' : '₱' + price;
     }
@@ -86,7 +90,6 @@ document.addEventListener('DOMContentLoaded', function () {
     function openModal(index) {
 
         applyService(index);
-        resetApptPicker();
 
         modal.classList.add('open');
         document.body.style.overflow = 'hidden';
@@ -102,7 +105,17 @@ document.addEventListener('DOMContentLoaded', function () {
 
         if (paymentStepEl) paymentStepEl.classList.remove('active');
 
-        resetApptPicker();
+    }
+
+    // Scrolls back up to the calendar so the customer can pick (or change)
+    // a date and time before anything else happens.
+    function scrollToApptPicker() {
+
+        const target = document.getElementById('apptPickerStep');
+
+        if (target) {
+            target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
 
     }
 
@@ -119,8 +132,17 @@ document.addEventListener('DOMContentLoaded', function () {
             const serviceName = item.getAttribute('data-service');
             const index = SERVICES.findIndex(function (s) { return s.name === serviceName; });
 
-            if (index !== -1) {
+            if (index === -1) return;
+
+            pendingServiceIndex = index;
+
+            const dateEl = document.getElementById('bookingDate');
+            const timeEl = document.getElementById('bookingTime');
+
+            if (dateEl && timeEl && dateEl.value && timeEl.value) {
                 openModal(index);
+            } else {
+                scrollToApptPicker();
             }
 
         });
@@ -134,22 +156,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
     });
 
-    // The hero "Book Appointment" button opens the booking modal directly,
-    // pre-filled with the first service, instead of just scrolling down.
-    const heroBookBtn = document.getElementById('heroBookBtn');
-
-    if (heroBookBtn) {
-
-        heroBookBtn.addEventListener('click', function (e) {
-
-            e.preventDefault();
-            openModal(0);
-
-        });
-
-    }
-
-    // The floating "Book Now" button does the same
+    // The floating "Book Now" button jumps straight to the calendar --
+    // or, if a date/time is already picked, opens the modal directly.
     const floatingBookBtn = document.getElementById('floatingBookBtn');
 
     if (floatingBookBtn) {
@@ -157,7 +165,15 @@ document.addEventListener('DOMContentLoaded', function () {
         floatingBookBtn.addEventListener('click', function (e) {
 
             e.preventDefault();
-            openModal(0);
+
+            const dateEl = document.getElementById('bookingDate');
+            const timeEl = document.getElementById('bookingTime');
+
+            if (dateEl && timeEl && dateEl.value && timeEl.value) {
+                openModal(pendingServiceIndex);
+            } else {
+                scrollToApptPicker();
+            }
 
         });
 
@@ -722,11 +738,13 @@ document.addEventListener('DOMContentLoaded', function () {
             apptChosenText.textContent = formatDateLabel(selectedApptDate) + ' · ' + formatTimeLabel(selectedApptTime);
         }
 
-        apptPickerStep.style.display = 'none';
-        bookingFormFields.style.display = 'block';
+        openModal(pendingServiceIndex);
 
     }
 
+    // Clears the homepage calendar back to a blank state -- used once a
+    // booking is fully completed, or when the customer wants to change
+    // their date/time from inside the modal.
     function resetApptPicker() {
 
         selectedApptDate = null;
@@ -738,9 +756,6 @@ document.addEventListener('DOMContentLoaded', function () {
         if (bookingDateInput) bookingDateInput.value = '';
         if (bookingTimeInput) bookingTimeInput.value = '';
         if (apptChosenText) apptChosenText.textContent = 'No date/time selected yet';
-
-        if (apptPickerStep) apptPickerStep.style.display = 'block';
-        if (bookingFormFields) bookingFormFields.style.display = 'none';
 
         renderApptCalendar();
         renderApptSlots();
@@ -775,10 +790,9 @@ document.addEventListener('DOMContentLoaded', function () {
 
         apptChangeBtn.addEventListener('click', function () {
 
-            bookingFormFields.style.display = 'none';
-            apptPickerStep.style.display = 'block';
-            renderApptCalendar();
-            renderApptSlots();
+            closeModal();
+            resetApptPicker();
+            scrollToApptPicker();
 
         });
 
@@ -818,8 +832,9 @@ document.addEventListener('DOMContentLoaded', function () {
         const time = bookingTimeInput.value;
 
         if (!date || !time) {
-            bookingFormFields.style.display = 'none';
-            apptPickerStep.style.display = 'block';
+            closeModal();
+            resetApptPicker();
+            scrollToApptPicker();
             return;
         }
 
@@ -830,8 +845,9 @@ document.addEventListener('DOMContentLoaded', function () {
 
             alert('Sorry, we\'re closed on that date. Please pick another day.');
 
-            bookingFormFields.style.display = 'none';
+            closeModal();
             resetApptPicker();
+            scrollToApptPicker();
             return;
 
         }
@@ -840,8 +856,9 @@ document.addEventListener('DOMContentLoaded', function () {
 
             alert('Sorry, that slot was just taken. Please pick another date or time.');
 
-            bookingFormFields.style.display = 'none';
+            closeModal();
             resetApptPicker();
+            scrollToApptPicker();
             return;
 
         }
@@ -977,6 +994,8 @@ document.addEventListener('DOMContentLoaded', function () {
                 bookingForm.reset();
                 applyService(0);
                 paymentStep.classList.remove('active');
+                pendingServiceIndex = 0;
+                resetApptPicker();
 
                 if (inspoPreviewList) inspoPreviewList.innerHTML = '';
                 if (inspoUploadLabel) inspoUploadLabel.textContent = 'Choose photos';
@@ -1024,243 +1043,12 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     // ===============================
-    // SERVICES: ORBIT <-> STRAIGHT LINE ANIMATION (toggle)
+    // SERVICES: circles are laid out in a line by CSS and clickable
+    // right away -- the gentle floating motion keeps running via the
+    // .featured-circle CSS animation.
     // ===============================
 
-    const featuredCircles = document.getElementById('featuredCircles');
-    const viewAllBtn = document.getElementById('viewAllServicesBtn');
-
-    if (featuredCircles && viewAllBtn) {
-
-        const circles = Array.prototype.slice.call(featuredCircles.querySelectorAll('.featured-circle'));
-        let isLine = false;
-        let isAnimating = false;
-
-        const V_HEIGHT = 340;
-        const LINE_HEIGHT = 220;
-
-        function easeInOutCubic(t) {
-            return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
-        }
-
-        // Positions the 5 circles into the V-shape, centered on whatever the
-        // container's actual measured width happens to be -- no guessing.
-        const V_SHAPE = [
-            { top: 0,   offset: 0 },
-            { top: 95,  offset: -115 },
-            { top: 95,  offset: 115 },
-            { top: 190, offset: -215 },
-            { top: 190, offset: 215 }
-        ];
-
-        function layoutVShape(animated) {
-
-            const circleSize = 130;
-            const centerX = featuredCircles.offsetWidth / 2;
-
-            circles.forEach(function (circle, index) {
-
-                circle.style.transition = animated
-                    ? 'top .8s cubic-bezier(.34,1.56,.64,1), left .8s cubic-bezier(.34,1.56,.64,1)'
-                    : 'none';
-
-                const pos = V_SHAPE[index];
-
-                circle.style.top = pos.top + 'px';
-                circle.style.left = (centerX + pos.offset - circleSize / 2) + 'px';
-
-                circle.classList.remove('show-label');
-
-            });
-
-        }
-
-        featuredCircles.style.height = V_HEIGHT + 'px';
-        layoutVShape(false);
-
-        function playForward() {
-
-            isAnimating = true;
-            featuredCircles.classList.add('is-active');
-            featuredCircles.style.height = V_HEIGHT + 'px';
-
-            const circleSize = 130;
-            const containerWidth = featuredCircles.offsetWidth;
-            const containerHeight = V_HEIGHT;
-            const centerX = containerWidth / 2;
-            const centerY = containerHeight / 2;
-            const radius = Math.min(containerWidth, containerHeight) / 2 - circleSize / 2 - 30;
-
-            // No CSS transition during the animation -- positions are driven frame-by-frame
-            circles.forEach(function (circle) {
-                circle.style.transition = 'none';
-            });
-
-            // Capture each circle's actual current position (the V-shape spot it's
-            // already sitting in) so the very first frame can start exactly there --
-            // no snap/jump before the motion begins.
-            const startPositions = circles.map(function (circle) {
-                return {
-                    x: parseFloat(circle.style.left) || 0,
-                    y: parseFloat(circle.style.top) || 0
-                };
-            });
-
-            // Every circle's fixed slot on the perfect circle, evenly spaced.
-            const baseAngles = circles.map(function (circle, index) {
-                return (index * ((Math.PI * 2) / circles.length)) - Math.PI / 2;
-            });
-
-            const targetPositions = baseAngles.map(function (angle) {
-                return {
-                    x: centerX + radius * Math.cos(angle) - circleSize / 2,
-                    y: centerY + radius * Math.sin(angle) - circleSize / 2
-                };
-            });
-
-            const moveDuration = 550;   // glide smoothly from V-shape into the circle
-            const spinDuration = 1200;  // then spin together around it
-            const totalDuration = moveDuration + spinDuration;
-            const totalRotation = Math.PI * 2 * 1.25; // a turn and a quarter
-            const startTime = performance.now();
-
-            function animate(now) {
-
-                const elapsed = now - startTime;
-
-                if (elapsed < moveDuration) {
-
-                    // Phase 1: glide from the current V-shape position into the circle slot
-                    const progress = easeInOutCubic(elapsed / moveDuration);
-
-                    circles.forEach(function (circle, index) {
-
-                        const start = startPositions[index];
-                        const target = targetPositions[index];
-
-                        circle.style.left = (start.x + (target.x - start.x) * progress) + 'px';
-                        circle.style.top = (start.y + (target.y - start.y) * progress) + 'px';
-
-                    });
-
-                } else {
-
-                    // Phase 2: now perfectly on the circle, spin together
-                    const spinElapsed = Math.min(elapsed - moveDuration, spinDuration);
-                    const progress = easeInOutCubic(spinElapsed / spinDuration);
-                    const rotation = progress * totalRotation;
-
-                    circles.forEach(function (circle, index) {
-
-                        const angle = baseAngles[index] + rotation;
-                        const x = centerX + radius * Math.cos(angle) - circleSize / 2;
-                        const y = centerY + radius * Math.sin(angle) - circleSize / 2;
-
-                        circle.style.left = x + 'px';
-                        circle.style.top = y + 'px';
-
-                    });
-
-                }
-
-                if (elapsed < totalDuration) {
-                    requestAnimationFrame(animate);
-                } else {
-                    settleIntoLine();
-                }
-
-            }
-
-            function settleIntoLine() {
-
-                const gap = 45;
-                const totalWidth = (circleSize * circles.length) + (gap * (circles.length - 1));
-                const startLeft = Math.max(0, (containerWidth - totalWidth) / 2);
-                const lineTop = 40;
-
-                featuredCircles.style.transition = 'height .7s ease';
-                featuredCircles.style.height = LINE_HEIGHT + 'px';
-
-                circles.forEach(function (circle, index) {
-
-                    circle.style.transition = 'top .9s cubic-bezier(.34,1.56,.64,1), left .9s cubic-bezier(.34,1.56,.64,1)';
-
-                    setTimeout(function () {
-
-                        circle.style.left = (startLeft + index * (circleSize + gap)) + 'px';
-                        circle.style.top = lineTop + 'px';
-
-                    }, index * 70);
-
-                });
-
-                // Reveal each service's name and price once it settles into place
-                const settleTime = 900 + (circles.length * 70);
-
-                circles.forEach(function (circle, index) {
-
-                    setTimeout(function () {
-                        circle.classList.add('show-label');
-                    }, settleTime + (index * 60));
-
-                });
-
-                // Once fully settled, resume the gentle floating so the row
-                // never looks completely frozen in place, and unlock clicking
-                // so the circles can now open the booking modal
-                setTimeout(function () {
-                    featuredCircles.classList.remove('is-active');
-                    isAnimating = false;
-                    isLine = true;
-                    circlesUnlocked = true;
-                    featuredCircles.classList.add('is-unlocked');
-                }, settleTime + 200);
-
-            }
-
-            requestAnimationFrame(animate);
-
-        }
-
-        function playBackward() {
-
-            isAnimating = true;
-            circlesUnlocked = false;
-            featuredCircles.classList.remove('is-unlocked');
-            featuredCircles.classList.add('is-active');
-
-            circles.forEach(function (circle) {
-                circle.classList.remove('show-label');
-            });
-
-            featuredCircles.style.transition = 'height .7s ease';
-            featuredCircles.style.height = V_HEIGHT + 'px';
-
-            layoutVShape(true);
-
-            setTimeout(function () {
-                featuredCircles.classList.remove('is-active');
-                isAnimating = false;
-                isLine = false;
-            }, 850);
-
-        }
-
-        viewAllBtn.addEventListener('click', function () {
-
-            if (isAnimating) {
-                return;
-            }
-
-            if (isLine) {
-                playBackward();
-            } else {
-                playForward();
-            }
-
-        });
-
-    }
+    circlesUnlocked = true;
 
 });
 // ===============================
@@ -1291,7 +1079,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     if (particleHost && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
 
-        const PARTICLE_COUNT = 18;
+        const PARTICLE_COUNT = 24;
 
         for (let i = 0; i < PARTICLE_COUNT; i++) {
 

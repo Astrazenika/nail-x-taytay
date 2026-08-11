@@ -11,6 +11,9 @@
     <meta name="description"
         content="Nail X Taytay — Home-based nail artist in Taytay, Rizal. Gel manicure, nail extensions, BIAB, custom nail art, and gel pedicure by appointment.">
 
+    <link rel="icon" type="image/jpeg" href="images/hero-nails.jpg">
+    <link rel="apple-touch-icon" href="images/hero-nails.jpg">
+
     <link rel="stylesheet" href="style.css">
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -107,7 +110,7 @@
 
         <div class="logo">
 
-            <span class="logo-mark">NT</span>
+            <img class="logo-mark" src="images/hero-nails.jpg" alt="Nail X Taytay logo">
 
             <div class="logo-text">
                 <h1>Nail X Taytay</h1>
@@ -123,7 +126,6 @@
             <a href="#services">Services</a>
             <a href="#pricing">Pricing</a>
             <a href="#gallery">Gallery</a>
-            <a href="#reviews">Reviews</a>
             <a href="#contact">Contact</a>
 
         </nav>
@@ -152,44 +154,81 @@
     <div class="luxury-glow luxury-glow-2" aria-hidden="true"></div>
     <div class="hero-particles" id="heroParticles" aria-hidden="true"></div>
 
-    <section class="hero" id="home">
+    <section class="hero book-hero" id="home">
 
-        <div class="hero-text">
+        <!-- Book a date + time right away, Google Calendar appointment-scheduling style -->
+        <div id="apptPickerStep" class="appt-picker">
 
-            <h2 class="hero-heading">
-                Pretty Nails,<br>
-                Pretty <span class="script">Confidence.</span>
-            </h2>
+            <div class="appt-picker-head">
+                <h3>Select an Appointment Time</h3>
+                <p>Pick an available date, then choose a time slot to start your booking.</p>
+            </div>
 
-            <p class="hero-sub">
-                Beauty in Every Detail,<br>
-                Confidence at Your Fingertips.
-            </p>
+            <div class="appt-picker-body">
 
-            <a href="https://www.google.com/maps/search/?api=1&query=Poland+St%2C+Taytay%2C+Rizal" target="_blank" rel="noopener" class="hero-location">
+                <div class="appt-calendar">
 
-                <svg viewBox="0 0 24 24" width="16" height="16"><path fill="currentColor" d="M12 2a7 7 0 0 0-7 7c0 5.25 7 13 7 13s7-7.75 7-13a7 7 0 0 0-7-7zm0 9.5A2.5 2.5 0 1 1 12 6.5a2.5 2.5 0 0 1 0 5z"/></svg>
-                Poland, Taytay Rizal
+                    <div class="appt-cal-nav">
+                        <button type="button" id="apptCalPrev" aria-label="Previous month">‹</button>
+                        <span id="apptCalMonthLabel">August 2026</span>
+                        <button type="button" id="apptCalNext" aria-label="Next month">›</button>
+                    </div>
 
-            </a>
+                    <div class="appt-cal-weekdays">
+                        <span>S</span><span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span>
+                    </div>
 
-            <div class="hero-buttons">
+                    <div class="appt-cal-grid" id="apptCalGrid"></div>
 
-                <a href="#contact" class="btn-primary" id="heroBookBtn">
-                    <svg viewBox="0 0 24 24" width="16" height="16"><path fill="currentColor" d="M7 2v2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-2V2h-2v2H9V2H7zm12 8v10H5V10h14z"/></svg>
-                    Book Appointment
-                </a>
+                </div>
 
-                <a href="#services" class="btn-outline">View Services</a>
+                <div class="appt-slots">
+
+                    <p class="appt-slots-date" id="apptSlotsDate">Select a date</p>
+
+                    <div class="appt-slots-list" id="apptSlotsList">
+                        <p class="appt-slots-empty">Choose a date on the calendar to see open times.</p>
+                    </div>
+
+                </div>
 
             </div>
 
-        </div>
+            <div class="appt-location-card">
 
-        <div class="hero-image">
+                <div class="appt-location-visuals">
 
-            <div class="hero-photo-frame">
-                <img src="images/hero-nails.jpg" alt="Gel nail manicure close-up">
+                    <div class="appt-location-map">
+                        <iframe
+                            src="https://www.google.com/maps?q=14.5530742,121.115012&z=17&output=embed"
+                            loading="lazy"
+                            referrerpolicy="no-referrer-when-downgrade"
+                            title="Nail X Taytay location map">
+                        </iframe>
+                    </div>
+
+                    <div class="appt-location-photo">
+                        <img src="images/shop-street-view.jpg" alt="Street view near Nail X Taytay">
+                    </div>
+
+                </div>
+
+                <div class="appt-location-info">
+
+                    <h4>Our Location</h4>
+
+                    <a href="https://www.google.com/maps/search/?api=1&query=14.5530742,121.115012" target="_blank" rel="noopener" class="appt-location-address">
+                        <svg viewBox="0 0 24 24" width="15" height="15"><path fill="currentColor" d="M12 2a7 7 0 0 0-7 7c0 5.25 7 13 7 13s7-7.75 7-13a7 7 0 0 0-7-7zm0 9.5A2.5 2.5 0 1 1 12 6.5a2.5 2.5 0 0 1 0 5z"/></svg>
+                        Poland, Santa Ana, Taytay, 1920 Rizal
+                    </a>
+
+                    <p class="appt-location-directions">
+                        Look for the <strong>berm side</strong> road — you'll see our
+                        <strong>Nail X Taytay</strong> sign at the very end.
+                    </p>
+
+                </div>
+
             </div>
 
         </div>
@@ -338,8 +377,6 @@
             </div>
 
         </div>
-
-        <button type="button" class="btn-primary center-btn" id="viewAllServicesBtn">View All Services</button>
 
         <p class="click-hint">Click any service to book an appointment</p>
 
@@ -500,40 +537,6 @@
     </div>
 
     <!-- ===========================
-            REVIEWS SECTION
-    ============================ -->
-
-    <section class="reviews-section" id="reviews">
-
-        <div class="section-heading">
-            <h2>Reviews</h2>
-            <span class="divider"></span>
-        </div>
-
-        <div class="reviews-grid">
-
-            <div class="review-card">
-                <p class="review-stars">★★★★★</p>
-                <p class="review-text">"Super ganda ng gel manicure ko, ang bait pa ni ate at sobrang linis ng workspace!"</p>
-                <p class="review-name">— Client, Taytay</p>
-            </div>
-
-            <div class="review-card">
-                <p class="review-stars">★★★★★</p>
-                <p class="review-text">"Home service made it so convenient. The nail art turned out exactly how I imagined it."</p>
-                <p class="review-name">— Client, Angono</p>
-            </div>
-
-            <div class="review-card">
-                <p class="review-stars">★★★★★</p>
-                <p class="review-text">"Tumagal ng matagal yung BIAB ko, walang chip! Babalik ako ulit."</p>
-                <p class="review-name">— Client, Cainta</p>
-            </div>
-
-        </div>
-
-    </section>
-
     <!-- ===========================
             FOOTER
     ============================ -->
@@ -586,6 +589,7 @@
 
         <div class="footer-bottom">
             <p>&copy; 2026 Nail X Taytay. All rights reserved.</p>
+            <span class="footer-credit">Created by Ramel Acedera</span>
             <button type="button" id="adminEntryBtn" class="admin-entry-link">
                 <svg viewBox="0 0 24 24" width="12" height="12"><path fill="currentColor" d="M7 10V7a5 5 0 0 1 10 0v3h1a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1v-9a1 1 0 0 1 1-1h1zm2 0h6V7a3 3 0 0 0-6 0v3z"/></svg>
                 Admin
@@ -594,7 +598,7 @@
 
     </footer>
 
-    <a href="#contact" class="floating-book" id="floatingBookBtn">
+    <a href="#home" class="floating-book" id="floatingBookBtn">
         <svg viewBox="0 0 24 24" width="22" height="22"><path fill="currentColor" d="M4 4h16v12H7l-3 3V4z"/></svg>
         <span>Book Now</span>
     </a>
@@ -613,7 +617,7 @@
 
                 <div class="modal-emblem">
                     <span class="emblem-star">✦</span>
-                    <span class="emblem-initials">NT</span>
+                    <img class="emblem-initials" src="images/hero-nails.jpg" alt="Nail X Taytay logo">
                     <svg class="emblem-leaf emblem-leaf-left" viewBox="0 0 24 24" width="16" height="16"><path fill="currentColor" d="M12 22c-4-2-8-6-8-11a8 8 0 0 1 8-8v19zM10 6c-2 1-3 3-3 5M9 11c-1 1-1.5 2.5-1.5 4"/></svg>
                     <svg class="emblem-leaf emblem-leaf-right" viewBox="0 0 24 24" width="16" height="16"><path fill="currentColor" d="M12 22c4-2 8-6 8-11a8 8 0 0 0-8-8v19zM14 6c2 1 3 3 3 5M15 11c1 1 1.5 2.5 1.5 4"/></svg>
                 </div>
@@ -686,84 +690,7 @@
 
                 <form id="bookingForm">
 
-                    <!-- Step 0: pick a date + time, Google Calendar appointment-scheduling style -->
-                    <div id="apptPickerStep" class="appt-picker">
-
-                        <div class="appt-picker-head">
-                            <h3>Select an Appointment Time</h3>
-                            <p>Pick an available date, then choose a time slot.</p>
-                        </div>
-
-                        <div class="appt-picker-body">
-
-                            <div class="appt-calendar">
-
-                                <div class="appt-cal-nav">
-                                    <button type="button" id="apptCalPrev" aria-label="Previous month">‹</button>
-                                    <span id="apptCalMonthLabel">August 2026</span>
-                                    <button type="button" id="apptCalNext" aria-label="Next month">›</button>
-                                </div>
-
-                                <div class="appt-cal-weekdays">
-                                    <span>S</span><span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span>
-                                </div>
-
-                                <div class="appt-cal-grid" id="apptCalGrid"></div>
-
-                            </div>
-
-                            <div class="appt-slots">
-
-                                <p class="appt-slots-date" id="apptSlotsDate">Select a date</p>
-
-                                <div class="appt-slots-list" id="apptSlotsList">
-                                    <p class="appt-slots-empty">Choose a date on the calendar to see open times.</p>
-                                </div>
-
-                            </div>
-
-                        </div>
-
-                        <div class="appt-location-card">
-
-                            <div class="appt-location-visuals">
-
-                                <div class="appt-location-map">
-                                    <iframe
-                                        src="https://www.google.com/maps?q=14.5530742,121.115012&z=17&output=embed"
-                                        loading="lazy"
-                                        referrerpolicy="no-referrer-when-downgrade"
-                                        title="Nail X Taytay location map">
-                                    </iframe>
-                                </div>
-
-                                <div class="appt-location-photo">
-                                    <img src="images/shop-street-view.jpg" alt="Street view near Nail X Taytay">
-                                </div>
-
-                            </div>
-
-                            <div class="appt-location-info">
-
-                                <h4>Our Location</h4>
-
-                                <a href="https://www.google.com/maps/search/?api=1&query=14.5530742,121.115012" target="_blank" rel="noopener" class="appt-location-address">
-                                    <svg viewBox="0 0 24 24" width="15" height="15"><path fill="currentColor" d="M12 2a7 7 0 0 0-7 7c0 5.25 7 13 7 13s7-7.75 7-13a7 7 0 0 0-7-7zm0 9.5A2.5 2.5 0 1 1 12 6.5a2.5 2.5 0 0 1 0 5z"/></svg>
-                                    Poland, Santa Ana, Taytay, 1920 Rizal
-                                </a>
-
-                                <p class="appt-location-directions">
-                                    Look for the <strong>berm side</strong> road — you'll see our
-                                    <strong>Nail X Taytay</strong> sign at the very end.
-                                </p>
-
-                            </div>
-
-                        </div>
-
-                    </div>
-
-                    <div id="bookingFormFields" style="display:none;">
+                    <div id="bookingFormFields">
 
                     <label>Service</label>
                     <div class="input-icon-wrap">
