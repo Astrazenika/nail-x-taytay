@@ -1016,8 +1016,23 @@ document.addEventListener('DOMContentLoaded', function () {
                 'Preferred Time: ' + time + '\n' +
                 'Notes: ' + notes;
 
+            function proceedToMessenger() {
+
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    navigator.clipboard.writeText(message).catch(function () {});
+                }
+
+                window.open('https://m.me/' + MESSENGER_PAGE_USERNAME, '_blank');
+
+                showBookingSuccess("We've copied your details — paste them into Messenger to finish arranging your booking with us.");
+
+            }
+
             // Record this booking too, same as the GCash path -- so it
             // shows up in the Booking Log and reserves the slot right away.
+            // IMPORTANT: we wait for the save to actually finish before
+            // opening Messenger -- on mobile, switching to another app can
+            // pause/kill the page mid-request, cutting the save off short.
             if (window.db) {
 
                 window.db.collection('bookings').add({
@@ -1031,23 +1046,24 @@ document.addEventListener('DOMContentLoaded', function () {
                     status: 'Pending',
                     createdAt: firebase.firestore.FieldValue.serverTimestamp()
                 }).then(function () {
+
                     bookedSlots.push(date + '|' + time);
-                }).catch(function () {});
 
-                window.db.collection('bookedSlots').add({
-                    date: date,
-                    time: time
-                }).catch(function () {});
+                    return window.db.collection('bookedSlots').add({
+                        date: date,
+                        time: time
+                    });
 
+                }).then(function () {
+                    proceedToMessenger();
+                }).catch(function (err) {
+                    console.error('Could not save booking:', err);
+                    proceedToMessenger();
+                });
+
+            } else {
+                proceedToMessenger();
             }
-
-            if (navigator.clipboard && navigator.clipboard.writeText) {
-                navigator.clipboard.writeText(message).catch(function () {});
-            }
-
-            window.open('https://m.me/' + MESSENGER_PAGE_USERNAME, '_blank');
-
-            showBookingSuccess("We've copied your details — paste them into Messenger to finish arranging your booking with us.");
 
         });
 
@@ -1077,8 +1093,48 @@ document.addEventListener('DOMContentLoaded', function () {
                 'Notes: ' + notes + '\n\n' +
                 'Here is my payment screenshot' + (inspoFiles.length ? ' and design inspo photo(s)' : '') + ':';
 
+            function proceedAfterSave() {
+
+                // On phones, the Web Share API can hand the inspo photos directly
+                // to whichever app the customer picks (including Messenger) --
+                // no manual attaching needed.
+                if (inspoFiles.length && navigator.canShare && navigator.canShare({ files: inspoFiles })) {
+
+                    navigator.share({
+                        files: inspoFiles,
+                        text: message
+                    }).catch(function () {
+                        // If they cancel the share sheet, still fall back below
+                    }).then(function () {
+                        window.open('https://m.me/' + MESSENGER_PAGE_USERNAME, '_blank');
+                        showBookingSuccess("We've received your booking! Please finish sending it on Messenger so we can confirm.");
+                    });
+
+                    return;
+
+                }
+
+                // Fallback (desktop, or no photos attached): copy the message and
+                // open Messenger -- ask them to attach the photos manually
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    navigator.clipboard.writeText(message).catch(function () {});
+                }
+
+                window.open('https://m.me/' + MESSENGER_PAGE_USERNAME, '_blank');
+
+                showBookingSuccess(
+                    'Your booking details have been copied — please PASTE this message' +
+                    (inspoFiles.length ? ', attach your inspo photo(s) and GCash payment screenshot,' : ' and attach your GCash payment screenshot,') +
+                    ' then hit send in Messenger to confirm your appointment.'
+                );
+
+            }
+
             // Record this booking in Firestore, so it shows up in the
-            // admin dashboard and as taken for the next customer
+            // admin dashboard and as taken for the next customer.
+            // IMPORTANT: wait for the save to actually finish before opening
+            // Messenger/sharing -- on mobile, switching to another app can
+            // pause/kill the page mid-request, cutting the save off short.
             if (window.db) {
 
                 window.db.collection('bookings').add({
@@ -1092,50 +1148,26 @@ document.addEventListener('DOMContentLoaded', function () {
                     status: 'Pending',
                     createdAt: firebase.firestore.FieldValue.serverTimestamp()
                 }).then(function () {
+
                     bookedSlots.push(date + '|' + time);
-                }).catch(function () {});
 
-                // Public, PII-free record -- this is what lets any visitor's
-                // calendar know a slot is taken without exposing names/contacts.
-                window.db.collection('bookedSlots').add({
-                    date: date,
-                    time: time
-                }).catch(function () {});
+                    // Public, PII-free record -- this is what lets any visitor's
+                    // calendar know a slot is taken without exposing names/contacts.
+                    return window.db.collection('bookedSlots').add({
+                        date: date,
+                        time: time
+                    });
 
-            }
-
-            // On phones, the Web Share API can hand the inspo photos directly
-            // to whichever app the customer picks (including Messenger) --
-            // no manual attaching needed.
-            if (inspoFiles.length && navigator.canShare && navigator.canShare({ files: inspoFiles })) {
-
-                navigator.share({
-                    files: inspoFiles,
-                    text: message
-                }).catch(function () {
-                    // If they cancel the share sheet, still fall back below
                 }).then(function () {
-                    window.open('https://m.me/' + MESSENGER_PAGE_USERNAME, '_blank');
-                    showBookingSuccess("We've received your booking! Please finish sending it on Messenger so we can confirm.");
+                    proceedAfterSave();
+                }).catch(function (err) {
+                    console.error('Could not save booking:', err);
+                    proceedAfterSave();
                 });
 
-                return;
-
+            } else {
+                proceedAfterSave();
             }
-
-            // Fallback (desktop, or no photos attached): copy the message and
-            // open Messenger -- ask them to attach the photos manually
-            if (navigator.clipboard && navigator.clipboard.writeText) {
-                navigator.clipboard.writeText(message).catch(function () {});
-            }
-
-            window.open('https://m.me/' + MESSENGER_PAGE_USERNAME, '_blank');
-
-            showBookingSuccess(
-                'Your booking details have been copied — please PASTE this message' +
-                (inspoFiles.length ? ', attach your inspo photo(s) and GCash payment screenshot,' : ' and attach your GCash payment screenshot,') +
-                ' then hit send in Messenger to confirm your appointment.'
-            );
 
         });
 
