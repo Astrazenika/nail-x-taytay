@@ -3820,6 +3820,8 @@ h1, h2, h3, h4{
     max-height:88vh;
     display:flex;
     flex-direction:column;
+    overflow-y:auto;
+    -webkit-overflow-scrolling:touch;
 }
 
 .admin-dash-head{
@@ -4589,10 +4591,22 @@ h1, h2, h3, h4{
 
     #adminDashboardModal .admin-dashboard-box{
         padding:24px;
+        max-height:94vh;
     }
 
     #adminDashboardModal .admin-dash-head h2{
         font-size:26px;
+    }
+
+    /* Avoid a "scroll trap": on touch devices, a small scrollable region
+       nested inside a larger scrollable box fights the outer scroll
+       gesture. Let the calendar flow naturally within the dashboard's
+       own scroll instead of having its own separate scrollbar. */
+    #adminDashboardModal .admin-calendar-view{
+        max-height:none;
+        overflow:visible;
+        grid-template-columns:1fr;
+        padding:16px;
     }
 
 }

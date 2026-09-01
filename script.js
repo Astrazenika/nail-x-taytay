@@ -570,7 +570,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     }
 
-    const STANDARD_TIME_SLOTS = ['06:00', '08:00', '10:00', '12:00', '14:00', '16:00', '18:00', '20:00', '22:00', '00:00'];
+    const STANDARD_TIME_SLOTS = ['08:00', '10:00', '13:00', '15:00', '17:00', '19:00', '21:00'];
 
     // ===============================
     // APPOINTMENT PICKER (calendar + time-slot pills)
