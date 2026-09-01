@@ -463,6 +463,10 @@ document.addEventListener('DOMContentLoaded', function () {
     const paymentStep = document.getElementById('paymentStep');
     const paymentBackBtn = document.getElementById('paymentBackBtn');
     const confirmPaymentBtn = document.getElementById('confirmPaymentBtn');
+    const messageToReserveBtn = document.getElementById('messageToReserveBtn');
+    const bookingSuccessStep = document.getElementById('bookingSuccessStep');
+    const bookingSuccessMessengerBtn = document.getElementById('bookingSuccessMessengerBtn');
+    const bookingSuccessDoneBtn = document.getElementById('bookingSuccessDoneBtn');
     const bookingDateInput = document.getElementById('bookingDate');
     const bookingTimeInput = document.getElementById('bookingTime');
 
@@ -611,6 +615,15 @@ document.addEventListener('DOMContentLoaded', function () {
 
         apptCalGrid.innerHTML = '';
 
+        // Count bookings per date from the public, name-free bookedSlots
+        // list — safe to show customers "this day already has bookings"
+        // without exposing anyone's name or contact info.
+        const bookingCountByDate = {};
+        bookedSlots.forEach(function (entry) {
+            const d = entry.split('|')[0];
+            bookingCountByDate[d] = (bookingCountByDate[d] || 0) + 1;
+        });
+
         for (let i = 0; i < startWeekday; i++) {
             const blank = document.createElement('span');
             blank.className = 'appt-cal-day appt-cal-day--empty';
@@ -629,11 +642,17 @@ document.addEventListener('DOMContentLoaded', function () {
 
             const isPast = cellDate < todayDate;
             const isOff = blockedDates.indexOf(cellStr) !== -1;
+            const bookingCount = bookingCountByDate[cellStr] || 0;
 
             if (isPast) {
                 btn.disabled = true;
             } else {
                 btn.addEventListener('click', function () { selectApptDate(cellStr); });
+            }
+
+            if (bookingCount > 0 && !isPast) {
+                btn.classList.add('appt-cal-day--has-bookings');
+                btn.title = bookingCount + (bookingCount === 1 ? ' booking' : ' bookings') + ' on this date';
             }
 
             if (isOff && !isPast) {
@@ -937,6 +956,103 @@ document.addEventListener('DOMContentLoaded', function () {
 
     }
 
+    function finishAndClose() {
+
+        closeModal();
+        bookingForm.reset();
+        applyService(0);
+        paymentStep.classList.remove('active');
+        if (bookingSuccessStep) bookingSuccessStep.classList.remove('active');
+        pendingServiceIndex = 0;
+        resetApptPicker();
+
+        if (inspoPreviewList) inspoPreviewList.innerHTML = '';
+        if (inspoUploadLabel) inspoUploadLabel.textContent = 'Choose photos';
+
+    }
+
+    function showBookingSuccess(instructionText) {
+
+        paymentStep.classList.remove('active');
+
+        const instructionEl = document.getElementById('bookingSuccessInstruction');
+        if (instructionEl && instructionText) instructionEl.textContent = instructionText;
+
+        if (bookingSuccessStep) bookingSuccessStep.classList.add('active');
+
+    }
+
+    if (bookingSuccessDoneBtn) {
+        bookingSuccessDoneBtn.addEventListener('click', finishAndClose);
+    }
+
+    if (bookingSuccessMessengerBtn) {
+        bookingSuccessMessengerBtn.addEventListener('click', function () {
+            window.open('https://m.me/' + MESSENGER_PAGE_USERNAME, '_blank');
+        });
+    }
+
+    // Shortcut for customers who'd rather just chat first instead of
+    // using the on-site GCash flow -- opens Messenger with their current
+    // form details, without reserving the slot (no payment proof yet, so
+    // the shop will confirm and reserve manually over chat).
+    if (messageToReserveBtn) {
+
+        messageToReserveBtn.addEventListener('click', function () {
+
+            const selectedService = SERVICES[parseInt(serviceSelect.value, 10)];
+            const name = document.getElementById('bookingName').value || '(not provided)';
+            const contact = document.getElementById('bookingContact').value || '(not provided)';
+            const date = document.getElementById('bookingDate').value || '(not provided)';
+            const time = document.getElementById('bookingTime').value || '(not provided)';
+            const notes = document.getElementById('bookingNotes').value || '(none)';
+
+            const message =
+                "Hi! I'd like to book an appointment — can we arrange the details and payment here?\n\n" +
+                'Service: ' + (selectedService ? selectedService.name : '') + '\n' +
+                'Name: ' + name + '\n' +
+                'Contact Number: ' + contact + '\n' +
+                'Preferred Date: ' + date + '\n' +
+                'Preferred Time: ' + time + '\n' +
+                'Notes: ' + notes;
+
+            // Record this booking too, same as the GCash path -- so it
+            // shows up in the Booking Log and reserves the slot right away.
+            if (window.db) {
+
+                window.db.collection('bookings').add({
+                    service: selectedService ? selectedService.name : '',
+                    name: name,
+                    contact: contact,
+                    date: date,
+                    time: time,
+                    notes: notes,
+                    price: (selectedService && typeof selectedService.price === 'number') ? selectedService.price : null,
+                    status: 'Pending',
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                }).then(function () {
+                    bookedSlots.push(date + '|' + time);
+                }).catch(function () {});
+
+                window.db.collection('bookedSlots').add({
+                    date: date,
+                    time: time
+                }).catch(function () {});
+
+            }
+
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(message).catch(function () {});
+            }
+
+            window.open('https://m.me/' + MESSENGER_PAGE_USERNAME, '_blank');
+
+            showBookingSuccess("We've copied your details — paste them into Messenger to finish arranging your booking with us.");
+
+        });
+
+    }
+
     // off to Messenger, where the shop owner can verify the GCash payment
     // and manually confirm the appointment.
     if (confirmPaymentBtn) {
@@ -988,20 +1104,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
             }
 
-            function finishAndClose() {
-
-                closeModal();
-                bookingForm.reset();
-                applyService(0);
-                paymentStep.classList.remove('active');
-                pendingServiceIndex = 0;
-                resetApptPicker();
-
-                if (inspoPreviewList) inspoPreviewList.innerHTML = '';
-                if (inspoUploadLabel) inspoUploadLabel.textContent = 'Choose photos';
-
-            }
-
             // On phones, the Web Share API can hand the inspo photos directly
             // to whichever app the customer picks (including Messenger) --
             // no manual attaching needed.
@@ -1014,7 +1116,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     // If they cancel the share sheet, still fall back below
                 }).then(function () {
                     window.open('https://m.me/' + MESSENGER_PAGE_USERNAME, '_blank');
-                    finishAndClose();
+                    showBookingSuccess("We've received your booking! Please finish sending it on Messenger so we can confirm.");
                 });
 
                 return;
@@ -1027,16 +1129,13 @@ document.addEventListener('DOMContentLoaded', function () {
                 navigator.clipboard.writeText(message).catch(function () {});
             }
 
-            alert(
-                'Your booking details have been copied!\n\n' +
-                'Messenger will now open — please PASTE this message' +
-                (inspoFiles.length ? ', attach your inspo photo(s) and GCash payment screenshot,' : ' and attach your GCash payment screenshot,') +
-                ' then hit send to confirm your appointment.'
-            );
-
             window.open('https://m.me/' + MESSENGER_PAGE_USERNAME, '_blank');
 
-            finishAndClose();
+            showBookingSuccess(
+                'Your booking details have been copied — please PASTE this message' +
+                (inspoFiles.length ? ', attach your inspo photo(s) and GCash payment screenshot,' : ' and attach your GCash payment screenshot,') +
+                ' then hit send in Messenger to confirm your appointment.'
+            );
 
         });
 

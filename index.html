@@ -197,6 +197,11 @@
 
                     <div class="appt-cal-grid" id="apptCalGrid"></div>
 
+                    <div class="appt-cal-legend">
+                        <span><span class="appt-cal-legend-dot"></span> Has bookings</span>
+                        <span><span class="appt-cal-legend-tag">OFF</span> Not available</span>
+                    </div>
+
                 </div>
 
                 <div class="appt-slots">
@@ -808,7 +813,29 @@
                             </span>
                         </button>
 
+                        <button type="button" id="messageToReserveBtn" class="btn-outline modal-messenger-btn">
+                            <span class="pay-btn-text">
+                                <span>💬 Message Us to Reserve Instead</span>
+                                <small>Prefer to arrange payment by chatting first? Tap here</small>
+                            </span>
+                        </button>
+
                         <p class="modal-secure-note">Your appointment is confirmed once we verify your payment.</p>
+
+                    </div>
+
+                    <div id="bookingSuccessStep" class="booking-success-step">
+
+                        <div class="booking-success-icon">
+                            <svg viewBox="0 0 24 24" width="30" height="30"><path fill="none" stroke="#3F7D4F" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" d="M20 6 9 17l-5-5"/></svg>
+                        </div>
+
+                        <h3>Booking Received! 🎉</h3>
+                        <p id="bookingSuccessInstruction">We've got your request — please finish sending your details on Messenger so we can confirm.</p>
+                        <p class="booking-success-note">Please be on time, or Chat me to update your booking.</p>
+
+                        <button type="button" id="bookingSuccessMessengerBtn" class="btn-outline">💬 Open Messenger</button>
+                        <button type="button" id="bookingSuccessDoneBtn" class="btn-primary">Done</button>
 
                     </div>
 

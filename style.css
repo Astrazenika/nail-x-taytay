@@ -1771,6 +1771,85 @@ img{
 
 }
 
+.modal-messenger-btn{
+
+    width:100%;
+
+    justify-content:center;
+
+    margin-top:10px;
+
+    padding:14px;
+
+    color:#3A2624;
+
+}
+
+.modal-messenger-btn .pay-btn-text{ align-items:center; text-align:center; }
+
+.booking-success-step{
+
+    display:none;
+    text-align:center;
+    padding:20px 6px 6px;
+
+}
+
+.booking-success-step.active{
+
+    display:block;
+    animation:popup .3s ease;
+
+}
+
+.booking-success-icon{
+
+    width:60px;
+    height:60px;
+    border-radius:50%;
+    background:rgba(63,125,79,.12);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    margin:0 auto 16px;
+
+}
+
+.booking-success-step h3{
+
+    font-family:'Playfair Display', serif;
+    font-size:20px;
+    color:#3A2624;
+    margin-bottom:8px;
+
+}
+
+.booking-success-step p{
+
+    font-size:13px;
+    color:#7B6F67;
+    line-height:1.6;
+    margin-bottom:8px;
+
+}
+
+.booking-success-note{
+
+    font-weight:600;
+    color:#7A203A !important;
+    margin-bottom:20px !important;
+
+}
+
+.booking-success-step .btn-outline,
+.booking-success-step .btn-primary{
+
+    width:100%;
+    justify-content:center;
+    margin-top:10px;
+
+}
+
 .pay-btn-text{
 
     display:flex;
@@ -3564,6 +3643,50 @@ h1, h2, h3, h4{
     padding:1px 4px;
     border-radius:5px;
     line-height:1.4;
+}
+
+.appt-cal-day--has-bookings::after{
+    content:'';
+    position:absolute;
+    top:3px;
+    left:50%;
+    transform:translateX(-50%);
+    width:5px;
+    height:5px;
+    border-radius:50%;
+    background:#3F7D4F;
+}
+
+.appt-cal-legend{
+    display:flex;
+    flex-wrap:wrap;
+    gap:14px;
+    justify-content:center;
+    margin-top:12px;
+    font-size:11px;
+    color:#7B6F67;
+}
+
+.appt-cal-legend span{
+    display:inline-flex;
+    align-items:center;
+    gap:5px;
+}
+
+.appt-cal-legend-dot{
+    width:6px;
+    height:6px;
+    border-radius:50%;
+    background:#3F7D4F;
+}
+
+.appt-cal-legend-tag{
+    font-size:7px;
+    font-weight:700;
+    color:#fff;
+    background:#7A1E32;
+    padding:1px 4px;
+    border-radius:5px;
 }
 
 .appt-cal-day:hover:not(:disabled):not(.appt-cal-day--empty){
