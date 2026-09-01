@@ -1520,7 +1520,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const thead = document.createElement('thead');
         thead.innerHTML =
             '<tr>' +
-            '<th>Booking ID</th><th>Date</th><th>Time</th><th>Customer Name</th><th>Contact</th>' +
+            '<th>Booking ID</th><th>Name</th><th>Date</th><th>Time</th><th>Contact</th>' +
             '<th>Service</th><th>Price</th><th>Notes</th><th>Done?</th><th>Actions</th>' +
             '</tr>';
         table.appendChild(thead);
@@ -1540,9 +1540,9 @@ document.addEventListener('DOMContentLoaded', function () {
 
             row.innerHTML =
                 '<td class="admin-booking-id" title="' + b.id + '">' + b.id.slice(0, 8) + '</td>' +
+                '<td>' + b.name + '</td>' +
                 '<td>' + formatBookingDate(b.date) + '</td>' +
                 '<td>' + formatBookingTime(b.time) + '</td>' +
-                '<td>' + b.name + '</td>' +
                 '<td>' + b.contact + '</td>' +
                 '<td>' + b.service + '</td>' +
                 '<td><button type="button" class="admin-price-cell" data-id="' + b.id + '">' + priceLabel + '</button></td>' +
