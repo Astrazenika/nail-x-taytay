@@ -2309,6 +2309,55 @@ document.addEventListener('DOMContentLoaded', function () {
         adminExportBtn.addEventListener('click', exportBookingsCSV);
     }
 
+    // One-time cleanup for calendar dots left behind by bookings deleted
+    // before Firestore rules allowed deleting bookedSlots (that permission
+    // bug is fixed now, but old leftovers need clearing out manually once).
+    const adminCleanupSlotsBtn = document.getElementById('adminCleanupSlotsBtn');
+
+    if (adminCleanupSlotsBtn) {
+
+        adminCleanupSlotsBtn.addEventListener('click', function () {
+
+            if (!window.db) return;
+
+            adminCleanupSlotsBtn.disabled = true;
+            adminCleanupSlotsBtn.textContent = 'Checking…';
+
+            window.db.collection('bookedSlots').get().then(function (slotsSnap) {
+
+                const validIds = {};
+                allBookings.forEach(function (b) { validIds[b.id] = true; });
+
+                const orphaned = [];
+                slotsSnap.forEach(function (doc) {
+                    if (!validIds[doc.id]) orphaned.push(doc.ref);
+                });
+
+                if (!orphaned.length) {
+                    alert('No leftover calendar dots found — everything is already in sync.');
+                    return null;
+                }
+
+                if (!confirm('Found ' + orphaned.length + ' leftover slot' + (orphaned.length === 1 ? '' : 's') + ' with no matching booking. Remove ' + (orphaned.length === 1 ? 'it' : 'them') + ' from the calendar?')) {
+                    return null;
+                }
+
+                return Promise.all(orphaned.map(function (ref) { return ref.delete(); })).then(function () {
+                    alert('Cleaned up ' + orphaned.length + ' leftover calendar ' + (orphaned.length === 1 ? 'dot' : 'dots') + '.');
+                });
+
+            }).catch(function (err) {
+                console.error('Cleanup failed:', err);
+                alert('Could not check for leftover slots. Make sure your Firestore rules allow admin read/delete on bookedSlots, then try again.');
+            }).finally(function () {
+                adminCleanupSlotsBtn.disabled = false;
+                adminCleanupSlotsBtn.textContent = '🧹 Clean Up Calendar';
+            });
+
+        });
+
+    }
+
     [adminSearchInput, adminFilterStatus, adminFilterService].forEach(function (el) {
         if (el) el.addEventListener('input', renderBookingTable);
     });
