@@ -471,6 +471,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const bookingTimeInput = document.getElementById('bookingTime');
 
     let bookedSlots = [];   // "date|time" combos that are already taken
+    let doneDates = {};     // date -> true, when at least one booking that day is marked Done
     let blockedDates = [];  // whole days that are unavailable no matter the time
 
     // Pull the list of booked slots and blocked days straight from Firestore.
@@ -482,10 +483,12 @@ document.addEventListener('DOMContentLoaded', function () {
         window.db.collection('bookedSlots').get().then(function (snapshot) {
 
             bookedSlots = [];
+            doneDates = {};
 
             snapshot.forEach(function (doc) {
                 const d = doc.data();
                 if (d.date && d.time) bookedSlots.push(d.date + '|' + d.time);
+                if (d.date && d.status === 'Done') doneDates[d.date] = true;
             });
 
             renderApptCalendar();
@@ -493,6 +496,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         }).catch(function () {
             bookedSlots = [];
+            doneDates = {};
         });
 
         window.db.collection('blockedDates').get().then(function (snapshot) {
@@ -651,8 +655,13 @@ document.addEventListener('DOMContentLoaded', function () {
             }
 
             if (bookingCount > 0 && !isPast) {
-                btn.classList.add('appt-cal-day--has-bookings');
-                btn.title = bookingCount + (bookingCount === 1 ? ' booking' : ' bookings') + ' on this date';
+
+                const isDone = !!doneDates[cellStr];
+                btn.classList.add(isDone ? 'appt-cal-day--is-done' : 'appt-cal-day--has-bookings');
+                btn.title = isDone
+                    ? 'Booking completed on this date'
+                    : bookingCount + (bookingCount === 1 ? ' booking' : ' bookings') + ' on this date';
+
             }
 
             if (isOff && !isPast) {
@@ -971,14 +980,391 @@ document.addEventListener('DOMContentLoaded', function () {
 
     }
 
-    function showBookingSuccess(instructionText) {
+    function showBookingSuccess(instructionText, customerPhone) {
 
         paymentStep.classList.remove('active');
 
         const instructionEl = document.getElementById('bookingSuccessInstruction');
         if (instructionEl && instructionText) instructionEl.textContent = instructionText;
 
+        if (customerPhone) renderReferralCode(customerPhone);
+
         if (bookingSuccessStep) bookingSuccessStep.classList.add('active');
+
+    }
+
+    function referralLinkFor(phone) {
+        const base = window.location.origin + window.location.pathname;
+        return base + '?ref=' + encodeURIComponent(phone);
+    }
+
+    function renderReferralCode(phone, ids) {
+
+        ids = ids || { pill: 'referralCodePill', qr: 'referralQrCode', copyBtn: 'referralCopyBtn' };
+
+        const pill = document.getElementById(ids.pill);
+        if (pill) {
+            const textSpan = pill.querySelector('span');
+            if (textSpan) textSpan.textContent = phone; else pill.textContent = phone;
+        }
+
+        const qrHolder = document.getElementById(ids.qr);
+        if (qrHolder && typeof QRCode !== 'undefined') {
+
+            qrHolder.innerHTML = '';
+
+            new QRCode(qrHolder, {
+                text: referralLinkFor(phone),
+                width: 160,
+                height: 160,
+                colorDark: '#7A203A',
+                colorLight: '#FFFAF8'
+            });
+
+        }
+
+        const copyBtn = document.getElementById(ids.copyBtn);
+        if (copyBtn) {
+
+            const originalLabel = copyBtn.textContent;
+
+            function shareOrCopy(feedbackEl) {
+
+                const link = referralLinkFor(phone);
+
+                if (navigator.share) {
+
+                    navigator.share({
+                        title: 'Nail X Taytay — My Referral Code',
+                        text: "Book with Nail X Taytay using my referral link and we both get to enjoy the perks!",
+                        url: link
+                    }).catch(function () { /* user cancelled the share sheet -- fine */ });
+
+                    return;
+
+                }
+
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    navigator.clipboard.writeText(link).then(function () {
+                        if (feedbackEl) {
+                            const original = feedbackEl.textContent;
+                            feedbackEl.textContent = feedbackEl === copyBtn ? 'Copied! ✓' : '✓';
+                            setTimeout(function () { feedbackEl.textContent = original; }, 1800);
+                        }
+                    }).catch(function () {});
+                }
+
+            }
+
+            copyBtn.onclick = function () { shareOrCopy(copyBtn); };
+
+            // Optional small copy icon inside the code box itself, when
+            // this layout has one -- triggers the exact same action.
+            const codeIconBtn = document.getElementById(ids.copyIcon);
+            if (codeIconBtn) codeIconBtn.onclick = function () { shareOrCopy(codeIconBtn); };
+
+        }
+
+    }
+
+    // ---- Check My Referrals: look up referral code + count without booking ----
+
+    const myReferralsNavLink = document.getElementById('myReferralsNavLink');
+    const referralCheckModal = document.getElementById('referralCheckModal');
+    const referralCheckModalClose = document.getElementById('referralCheckModalClose');
+    const referralCheckForm = document.getElementById('referralCheckForm');
+    const referralCheckResult = document.getElementById('referralCheckResult');
+    const referralCheckNotFound = document.getElementById('referralCheckNotFound');
+    const referralCheckBtn = document.getElementById('referralCheckBtn');
+    const referralCheckAgainBtn = document.getElementById('referralCheckAgainBtn');
+    const referralNotFoundBackBtn = document.getElementById('referralNotFoundBackBtn');
+
+    function showReferralStep(step) {
+        // step: 'form' | 'result' | 'notfound'
+        if (referralCheckForm) referralCheckForm.hidden = step !== 'form';
+        if (referralCheckResult) referralCheckResult.hidden = step !== 'result';
+        if (referralCheckNotFound) referralCheckNotFound.hidden = step !== 'notfound';
+    }
+
+    function openReferralCheckModal() {
+
+        showReferralStep('form');
+        const errEl = document.getElementById('referralCheckError');
+        if (errEl) errEl.textContent = '';
+        const phoneInput = document.getElementById('referralCheckPhone');
+        if (phoneInput) phoneInput.value = '';
+
+        if (referralCheckModal) {
+            referralCheckModal.classList.add('open');
+            document.body.style.overflow = 'hidden';
+        }
+
+    }
+
+    function closeReferralCheckModal() {
+        if (referralCheckModal) {
+            referralCheckModal.classList.remove('open');
+            document.body.style.overflow = '';
+        }
+    }
+
+    if (myReferralsNavLink) {
+        myReferralsNavLink.addEventListener('click', function (e) {
+            e.preventDefault();
+            openReferralCheckModal();
+        });
+    }
+
+    const referralPromoBanner = document.getElementById('referralPromoBanner');
+    if (referralPromoBanner) {
+        referralPromoBanner.addEventListener('click', function () {
+            openReferralCheckModal();
+        });
+    }
+
+    if (referralCheckModalClose) referralCheckModalClose.addEventListener('click', closeReferralCheckModal);
+
+    if (referralCheckModal) {
+        referralCheckModal.addEventListener('click', function (e) {
+            if (e.target === referralCheckModal) closeReferralCheckModal();
+        });
+    }
+
+    // Accessibility: ESC closes this modal too, matching the site's other modals.
+    document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape' && referralCheckModal && referralCheckModal.classList.contains('open')) {
+            closeReferralCheckModal();
+        }
+    });
+
+    if (referralCheckAgainBtn) referralCheckAgainBtn.addEventListener('click', function () { showReferralStep('form'); });
+    if (referralNotFoundBackBtn) referralNotFoundBackBtn.addEventListener('click', function () { showReferralStep('form'); });
+
+    // Auto-format: strip anything that isn't a digit as the customer types,
+    // so pasted numbers with spaces/dashes still validate cleanly.
+    const referralPhoneInputEl = document.getElementById('referralCheckPhone');
+    if (referralPhoneInputEl) {
+        referralPhoneInputEl.addEventListener('input', function () {
+            referralPhoneInputEl.value = referralPhoneInputEl.value.replace(/\D/g, '').slice(0, 11);
+        });
+    }
+
+    // Light client-side cooldown so someone can't hammer the check button --
+    // real rate limiting would need a backend function, which this static
+    // site doesn't have, but this is a reasonable deterrent on its own.
+    let referralCheckCooldownUntil = 0;
+    const REFERRAL_REWARD_THRESHOLD = 3;
+
+    function redeemLinkFor(phone) {
+        const base = window.location.origin + window.location.pathname;
+        return base + '?redeem=' + encodeURIComponent(phone);
+    }
+
+    // Shared by both the manual "Check My Referrals" button and the
+    // auto-redeem flow (?redeem=... link opened from the reward QR code).
+    function performReferralCheck(phone, onDone) {
+
+        const errEl = document.getElementById('referralCheckError');
+        if (errEl) errEl.textContent = '';
+
+        if (!window.db) {
+            if (errEl) errEl.textContent = 'Could not connect right now — please try again shortly.';
+            if (onDone) onDone();
+            return;
+        }
+
+        // Step 1: does this number belong to an actual customer at all?
+        // (i.e. have they ever completed a booking with us)
+        window.db.collection('bookings').where('contact', '==', phone).limit(1).get().then(function (ownBookingSnap) {
+
+            if (ownBookingSnap.empty) {
+                showReferralStep('notfound');
+                return null;
+            }
+
+            // Step 2: count how many OTHER bookings list this number as
+            // the referrer AND have been marked "Done" by staff. A referral
+            // only counts once the referred person actually shows up and
+            // gets serviced -- this stops someone from padding their count
+            // with random/fake numbers that never lead to a real visit.
+            return window.db.collection('bookings')
+                .where('referredBy', '==', phone)
+                .where('status', '==', 'Done')
+                .get().then(function (snapshot) {
+
+                const count = snapshot.size;
+
+                const countEl = document.getElementById('referralCheckCount');
+                if (countEl) countEl.textContent = count;
+
+                const statusEl = document.getElementById('referralCheckStatus');
+                if (statusEl) statusEl.textContent = count > 0 ? 'Active' : 'New';
+
+                renderReferralCode(phone, {
+                    pill: 'checkReferralCodePill',
+                    qr: 'checkReferralQrCode',
+                    copyBtn: 'checkReferralCopyBtn',
+                    copyIcon: 'checkReferralCodeCopyIcon'
+                });
+
+                // Every 3rd referral (3, 6, 9, ...) unlocks another 50% OFF
+                // reward -- show the "Congratulations" banner with a
+                // scannable QR our staff can verify at the counter.
+                const rewardBanner = document.getElementById('referralRewardBanner');
+                if (rewardBanner) {
+
+                    if (count > 0 && count % REFERRAL_REWARD_THRESHOLD === 0) {
+
+                        const rewardTier = count / REFERRAL_REWARD_THRESHOLD;
+
+                        rewardBanner.hidden = false;
+
+                        const rewardTextEl = document.getElementById('referralRewardText');
+                        if (rewardTextEl) {
+                            rewardTextEl.innerHTML = "You've referred " + count + " friends and unlocked " +
+                                (rewardTier > 1 ? 'reward #' + rewardTier + ' — ' : '') +
+                                "<strong>50% OFF</strong> your next booking. Show this QR code to our staff to claim it.";
+                        }
+
+                        const rewardQrHolder = document.getElementById('referralRewardQr');
+                        if (rewardQrHolder && typeof QRCode !== 'undefined') {
+                            rewardQrHolder.innerHTML = '';
+                            new QRCode(rewardQrHolder, {
+                                text: redeemLinkFor(phone),
+                                width: 140,
+                                height: 140,
+                                colorDark: '#7A203A',
+                                colorLight: '#FFFAF8'
+                            });
+                        }
+
+                        const downloadBtn = document.getElementById('referralRewardDownloadBtn');
+                        if (downloadBtn) {
+                            downloadBtn.onclick = function () {
+
+                                const canvas = rewardQrHolder ? rewardQrHolder.querySelector('canvas') : null;
+                                if (!canvas) return;
+
+                                const link = document.createElement('a');
+                                link.download = 'nailxtaytay-reward-' + phone + '.png';
+                                link.href = canvas.toDataURL('image/png');
+                                document.body.appendChild(link);
+                                link.click();
+                                document.body.removeChild(link);
+
+                            };
+                        }
+
+                    } else {
+                        rewardBanner.hidden = true;
+                    }
+
+                }
+
+                showReferralStep('result');
+
+            });
+
+        }).catch(function (err) {
+            console.error('Could not check referrals:', err);
+            if (errEl) errEl.textContent = 'Something went wrong — please try again.';
+        }).finally(function () {
+            if (onDone) onDone();
+        });
+
+    }
+
+    if (referralCheckBtn) {
+
+        referralCheckBtn.addEventListener('click', function () {
+
+            const phoneInput = document.getElementById('referralCheckPhone');
+            const errEl = document.getElementById('referralCheckError');
+            const phone = phoneInput.value.trim();
+
+            if (errEl) errEl.textContent = '';
+
+            if (Date.now() < referralCheckCooldownUntil) {
+                if (errEl) errEl.textContent = 'Please wait a moment before checking again.';
+                return;
+            }
+
+            if (!phone) {
+                if (errEl) errEl.textContent = 'Please enter your mobile number.';
+                return;
+            }
+
+            if (!/^09\d{9}$/.test(phone)) {
+                if (errEl) errEl.textContent = 'Please enter a valid Philippine mobile number.';
+                return;
+            }
+
+            referralCheckBtn.disabled = true;
+            referralCheckBtn.classList.add('is-loading');
+            referralCheckBtn.textContent = 'Checking…';
+
+            performReferralCheck(phone, function () {
+                referralCheckBtn.disabled = false;
+                referralCheckBtn.classList.remove('is-loading');
+                referralCheckBtn.textContent = 'Check My Referrals';
+                referralCheckCooldownUntil = Date.now() + 4000;
+            });
+
+        });
+
+    }
+
+    // Redemption flow: staff scans a customer's reward QR code, which opens
+    // this site with ?redeem=<phone> -- automatically show that number's
+    // referral status so staff can verify the 50% OFF reward on the spot.
+    (function autoRedeemFromQr() {
+
+        const params = new URLSearchParams(window.location.search);
+        const redeemPhone = params.get('redeem');
+        if (!redeemPhone) return;
+
+        openReferralCheckModal();
+        showReferralStep('result');
+        performReferralCheck(redeemPhone);
+
+    })();
+
+    // Referral capture: if someone arrived via a friend's referral link
+    // (?ref=09XXXXXXXXX), remember it and show a small note in the form.
+    // No page is off-limits here since bookedSlots/etc. are already public.
+    let referredByNumber = null;
+
+    (function captureReferral() {
+
+        const params = new URLSearchParams(window.location.search);
+        const ref = params.get('ref');
+        if (!ref) return;
+
+        referredByNumber = ref;
+
+        const note = document.getElementById('referralDetectedNote');
+        const numberEl = document.getElementById('referralDetectedNumber');
+        if (numberEl) numberEl.textContent = ref;
+        if (note) note.hidden = false;
+
+    })();
+
+    // Anti-abuse check: a phone number can only ever generate referral
+    // credit ONCE, on its very first booking. If this number has booked
+    // before (repeat customer) or is trying to refer itself, the referral
+    // is dropped -- this stops the same person from looping the same
+    // referral link over and over to fake up referral counts.
+    function validateReferrer(contact, claimedReferrer) {
+
+        if (!claimedReferrer) return Promise.resolve(null);
+        if (claimedReferrer === contact) return Promise.resolve(null); // self-referral
+        if (!window.db) return Promise.resolve(claimedReferrer);
+
+        return window.db.collection('bookings').where('contact', '==', contact).limit(1).get().then(function (snapshot) {
+            return snapshot.empty ? claimedReferrer : null; // empty = first-ever booking for this number
+        }).catch(function () {
+            return claimedReferrer; // if the check itself fails, don't block the booking over it
+        });
 
     }
 
@@ -1024,7 +1410,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
                 window.open('https://m.me/' + MESSENGER_PAGE_USERNAME, '_blank');
 
-                showBookingSuccess("We've copied your details — paste them into Messenger to finish arranging your booking with us.");
+                showBookingSuccess("We've copied your details — paste them into Messenger to finish arranging your booking with us.", contact);
 
             }
 
@@ -1035,23 +1421,32 @@ document.addEventListener('DOMContentLoaded', function () {
             // pause/kill the page mid-request, cutting the save off short.
             if (window.db) {
 
-                window.db.collection('bookings').add({
-                    service: selectedService ? selectedService.name : '',
-                    name: name,
-                    contact: contact,
-                    date: date,
-                    time: time,
-                    notes: notes,
-                    price: (selectedService && typeof selectedService.price === 'number') ? selectedService.price : null,
-                    status: 'Pending',
-                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
-                }).then(function () {
+                validateReferrer(contact, referredByNumber).then(function (validReferrer) {
+
+                    return window.db.collection('bookings').add({
+                        service: selectedService ? selectedService.name : '',
+                        name: name,
+                        contact: contact,
+                        date: date,
+                        time: time,
+                        notes: notes,
+                        price: (selectedService && typeof selectedService.price === 'number') ? selectedService.price : null,
+                        status: 'Pending',
+                        referredBy: validReferrer,
+                        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+
+                }).then(function (bookingRef) {
 
                     bookedSlots.push(date + '|' + time);
 
-                    return window.db.collection('bookedSlots').add({
+                    // Same doc ID as the booking itself, so the admin side can
+                    // find and update this slot's status later (e.g. when
+                    // marking the booking Done) without a separate lookup.
+                    return window.db.collection('bookedSlots').doc(bookingRef.id).set({
                         date: date,
-                        time: time
+                        time: time,
+                        status: 'Pending'
                     });
 
                 }).then(function () {
@@ -1107,7 +1502,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         // If they cancel the share sheet, still fall back below
                     }).then(function () {
                         window.open('https://m.me/' + MESSENGER_PAGE_USERNAME, '_blank');
-                        showBookingSuccess("We've received your booking! Please finish sending it on Messenger so we can confirm.");
+                        showBookingSuccess("We've received your booking! Please finish sending it on Messenger so we can confirm.", contact);
                     });
 
                     return;
@@ -1125,7 +1520,8 @@ document.addEventListener('DOMContentLoaded', function () {
                 showBookingSuccess(
                     'Your booking details have been copied — please PASTE this message' +
                     (inspoFiles.length ? ', attach your inspo photo(s) and GCash payment screenshot,' : ' and attach your GCash payment screenshot,') +
-                    ' then hit send in Messenger to confirm your appointment.'
+                    ' then hit send in Messenger to confirm your appointment.',
+                    contact
                 );
 
             }
@@ -1137,25 +1533,32 @@ document.addEventListener('DOMContentLoaded', function () {
             // pause/kill the page mid-request, cutting the save off short.
             if (window.db) {
 
-                window.db.collection('bookings').add({
-                    service: selectedService ? selectedService.name : '',
-                    name: name,
-                    contact: contact,
-                    date: date,
-                    time: time,
-                    notes: notes,
-                    price: (selectedService && typeof selectedService.price === 'number') ? selectedService.price : null,
-                    status: 'Pending',
-                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
-                }).then(function () {
+                validateReferrer(contact, referredByNumber).then(function (validReferrer) {
+
+                    return window.db.collection('bookings').add({
+                        service: selectedService ? selectedService.name : '',
+                        name: name,
+                        contact: contact,
+                        date: date,
+                        time: time,
+                        notes: notes,
+                        price: (selectedService && typeof selectedService.price === 'number') ? selectedService.price : null,
+                        status: 'Pending',
+                        referredBy: validReferrer,
+                        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+
+                }).then(function (bookingRef) {
 
                     bookedSlots.push(date + '|' + time);
 
                     // Public, PII-free record -- this is what lets any visitor's
                     // calendar know a slot is taken without exposing names/contacts.
-                    return window.db.collection('bookedSlots').add({
+                    // Same doc ID as the booking itself, so status stays in sync.
+                    return window.db.collection('bookedSlots').doc(bookingRef.id).set({
                         date: date,
-                        time: time
+                        time: time,
+                        status: 'Pending'
                     });
 
                 }).then(function () {
@@ -1533,6 +1936,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         time: d.time || '',
                         name: d.name || '',
                         contact: d.contact || '',
+                        referredBy: d.referredBy || '',
                         service: d.service || '',
                         notes: d.notes || '',
                         price: (typeof d.price === 'number') ? d.price : null,
@@ -1651,7 +2055,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const thead = document.createElement('thead');
         thead.innerHTML =
             '<tr>' +
-            '<th>Booking ID</th><th>Name</th><th>Date</th><th>Time</th><th>Contact</th>' +
+            '<th>Booking ID</th><th>Name</th><th>Date</th><th>Time</th><th>Contact</th><th>Referred By</th>' +
             '<th>Service</th><th>Price</th><th>Notes</th><th>Done?</th><th>Actions</th>' +
             '</tr>';
         table.appendChild(thead);
@@ -1675,6 +2079,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 '<td>' + formatBookingDate(b.date) + '</td>' +
                 '<td>' + formatBookingTime(b.time) + '</td>' +
                 '<td>' + b.contact + '</td>' +
+                '<td>' + (b.referredBy ? b.referredBy : '—') + '</td>' +
                 '<td>' + b.service + '</td>' +
                 '<td><button type="button" class="admin-price-cell" data-id="' + b.id + '">' + priceLabel + '</button></td>' +
                 '<td></td>' +
@@ -1690,7 +2095,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 '</div>' +
                 '</td>';
 
-            row.children[7].replaceWith(notesCell);
+            row.children[8].replaceWith(notesCell);
 
             tbody.appendChild(row);
 
@@ -1757,6 +2162,11 @@ document.addEventListener('DOMContentLoaded', function () {
             .catch(function () {
                 alert('Could not update this booking. Please try again.');
             });
+
+        // Keep the public bookedSlots record in sync -- this is what turns
+        // the customer-facing calendar dot from green to red once a booking
+        // is completed. Best-effort: doesn't block the main status update.
+        window.db.collection('bookedSlots').doc(id).update({ status: nextStatus }).catch(function () {});
 
     }
 
@@ -1852,7 +2262,7 @@ document.addEventListener('DOMContentLoaded', function () {
             return;
         }
 
-        const header = ['Booking ID', 'Date', 'Time', 'Customer Name', 'Contact Number', 'Service', 'Price', 'Status', 'Notes'];
+        const header = ['Booking ID', 'Date', 'Time', 'Customer Name', 'Contact Number', 'Referred By', 'Service', 'Price', 'Status', 'Notes'];
 
         function csvEscape(val) {
             const str = String(val == null ? '' : val);
@@ -1862,7 +2272,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const lines = [header.map(csvEscape).join(',')];
 
         rows.forEach(function (b) {
-            lines.push([b.id, b.date, formatBookingTime(b.time), b.name, b.contact, b.service, b.price != null ? b.price : '', b.status, b.notes]
+            lines.push([b.id, b.date, formatBookingTime(b.time), b.name, b.contact, b.referredBy || '', b.service, b.price != null ? b.price : '', b.status, b.notes]
                 .map(csvEscape).join(','));
         });
 
@@ -1898,8 +2308,10 @@ document.addEventListener('DOMContentLoaded', function () {
 
     const adminTabTable = document.getElementById('adminTabTable');
     const adminTabCalendar = document.getElementById('adminTabCalendar');
+    const adminTabReferrals = document.getElementById('adminTabReferrals');
     const adminToolbar = document.getElementById('adminToolbar');
     const adminCalendarView = document.getElementById('adminCalendarView');
+    const adminReferralsView = document.getElementById('adminReferralsView');
     const adminDashCalGrid = document.getElementById('adminDashCalGrid');
     const adminDashCalMonthLabel = document.getElementById('adminDashCalMonthLabel');
     const adminDashCalPrev = document.getElementById('adminDashCalPrev');
@@ -1914,20 +2326,334 @@ document.addEventListener('DOMContentLoaded', function () {
     function switchAdminView(view) {
 
         const showCalendar = view === 'calendar';
+        const showReferrals = view === 'referrals';
+        const showTable = !showCalendar && !showReferrals;
 
-        adminTabTable.classList.toggle('is-active', !showCalendar);
+        adminTabTable.classList.toggle('is-active', showTable);
         adminTabCalendar.classList.toggle('is-active', showCalendar);
+        if (adminTabReferrals) adminTabReferrals.classList.toggle('is-active', showReferrals);
 
-        adminToolbar.style.display = showCalendar ? 'none' : 'flex';
-        adminDashBody.style.display = showCalendar ? 'none' : 'block';
+        adminToolbar.style.display = showTable ? 'flex' : 'none';
+        adminDashBody.style.display = showTable ? 'block' : 'none';
         adminCalendarView.style.display = showCalendar ? 'grid' : 'none';
+        if (adminReferralsView) adminReferralsView.style.display = showReferrals ? 'block' : 'none';
 
         if (showCalendar) loadAdminOffDates();
+        if (showReferrals) renderAdminReferrals();
 
     }
 
     if (adminTabTable) adminTabTable.addEventListener('click', function () { switchAdminView('table'); });
     if (adminTabCalendar) adminTabCalendar.addEventListener('click', function () { switchAdminView('calendar'); });
+    if (adminTabReferrals) adminTabReferrals.addEventListener('click', function () { switchAdminView('referrals'); });
+
+    // ===============================
+    // REWARD QR SCANNER -- staff scan a customer's reward QR (their phone's
+    // "Congratulations" code) with the device camera, and instantly see how
+    // many rewards they've earned vs already used, with a button to mark
+    // one as used. Uses the html5-qrcode library already loaded on this page.
+    // ===============================
+
+    const adminScanBtn = document.getElementById('adminScanBtn');
+    const adminQrScannerOverlay = document.getElementById('adminQrScannerOverlay');
+    const adminQrScannerClose = document.getElementById('adminQrScannerClose');
+    const adminScanResultEl = document.getElementById('adminScanResult');
+    const adminScanResultName = document.getElementById('adminScanResultName');
+    const adminScanResultDetail = document.getElementById('adminScanResultDetail');
+    const adminRedeemBtn = document.getElementById('adminRedeemBtn');
+    const adminScanAgainBtn = document.getElementById('adminScanAgainBtn');
+
+    let html5QrScanner = null;
+    let currentScannedPhone = null;
+
+    let scannerBusy = false; // true while start()/stop() is in flight, to prevent overlapping calls
+
+    function stopAdminScanner() {
+
+        if (!html5QrScanner) return Promise.resolve();
+
+        const scanner = html5QrScanner;
+        html5QrScanner = null;
+
+        return scanner.stop().then(function () {
+            return scanner.clear();
+        }).catch(function () {
+            // Already stopped/never started -- fine, nothing left to clean up.
+        });
+
+    }
+
+    function startAdminScanner() {
+
+        if (scannerBusy) return; // a start or stop is already in progress -- ignore this click
+        scannerBusy = true;
+
+        // Always fully stop any previous instance first -- starting a new
+        // one while the last is still releasing the camera is what caused
+        // the scanner to freeze/get stuck.
+        stopAdminScanner().then(function () {
+
+            if (typeof Html5Qrcode === 'undefined') {
+                document.getElementById('adminQrReaderRegion').innerHTML =
+                    '<p class="admin-dash-status">Scanner failed to load. Check your internet connection and try again.</p>';
+                scannerBusy = false;
+                return;
+            }
+
+            adminScanResultEl.hidden = true;
+            currentScannedPhone = null;
+
+            const scanner = new Html5Qrcode('adminQrReaderRegion');
+            html5QrScanner = scanner;
+
+            const scanBoxSize = Math.min(220, Math.floor(window.innerWidth * 0.6));
+
+            scanner.start(
+                { facingMode: 'environment' },
+                { fps: 10, qrbox: scanBoxSize },
+                function (decodedText) {
+
+                    // A phone can hold multiple reward QRs across visits --
+                    // ignore repeat frames of the same code while we're
+                    // already showing a result for it.
+                    if (decodedText === currentScannedPhone) return;
+
+                    let phone = null;
+
+                    try {
+                        const url = new URL(decodedText);
+                        phone = url.searchParams.get('redeem') || url.searchParams.get('ref');
+                    } catch (e) {
+                        // not a URL -- ignore, keep scanning
+                    }
+
+                    if (!phone || !/^09\d{9}$/.test(phone)) return;
+
+                    currentScannedPhone = decodedText;
+                    stopAdminScanner();
+                    showAdminScanResult(phone);
+
+                },
+                function () { /* per-frame no-match -- expected constantly while aiming, ignore */ }
+            ).then(function () {
+                scannerBusy = false;
+            }).catch(function (err) {
+                document.getElementById('adminQrReaderRegion').innerHTML =
+                    '<p class="admin-dash-status">Could not access the camera. Please allow camera permission and try again.</p>';
+                console.error('Scanner start failed:', err);
+                scannerBusy = false;
+            });
+
+        });
+
+    }
+
+    function showAdminScanResult(phone) {
+
+        adminScanResultName.textContent = 'Looking up ' + phone + '…';
+        adminScanResultDetail.textContent = '';
+        adminRedeemBtn.hidden = true;
+        adminScanResultEl.hidden = false;
+
+        if (!window.db) {
+            adminScanResultName.textContent = 'Could not connect right now.';
+            return;
+        }
+
+        Promise.all([
+            window.db.collection('bookings').where('contact', '==', phone).limit(1).get(),
+            window.db.collection('bookings').where('referredBy', '==', phone).where('status', '==', 'Done').get(),
+            window.db.collection('referralRewards').doc(phone).get()
+        ]).then(function (results) {
+
+            const ownSnap = results[0];
+            const referredSnap = results[1];
+            const rewardDoc = results[2];
+
+            const name = ownSnap.empty ? phone : (ownSnap.docs[0].data().name || phone);
+            const count = referredSnap.size;
+            const earned = Math.floor(count / ADMIN_REFERRAL_REWARD_THRESHOLD);
+            const claimed = rewardDoc.exists ? (rewardDoc.data().claimedCount || 0) : 0;
+            const remaining = Math.max(0, earned - claimed);
+
+            adminScanResultName.textContent = name + ' — ' + phone;
+
+            if (remaining > 0) {
+                adminScanResultDetail.textContent =
+                    count + ' completed referrals · ' + remaining + ' reward' + (remaining === 1 ? '' : 's') + ' available (' + claimed + ' already used)';
+                adminRedeemBtn.hidden = false;
+                adminRedeemBtn.textContent = 'Mark 1 Reward as Used';
+                adminRedeemBtn.onclick = function () { markRewardUsed(phone); };
+            } else if (earned > 0) {
+                adminScanResultDetail.textContent =
+                    count + ' completed referrals · all ' + earned + ' reward' + (earned === 1 ? '' : 's') + ' already used.';
+                adminRedeemBtn.hidden = true;
+            } else {
+                adminScanResultDetail.textContent =
+                    count + ' completed referral' + (count === 1 ? '' : 's') + ' so far — needs ' + ADMIN_REFERRAL_REWARD_THRESHOLD + ' to earn a reward.';
+                adminRedeemBtn.hidden = true;
+            }
+
+        }).catch(function (err) {
+            adminScanResultName.textContent = 'Something went wrong.';
+            adminScanResultDetail.textContent = 'Please try scanning again.';
+            console.error('Reward lookup failed:', err);
+        });
+
+    }
+
+    function markRewardUsed(phone) {
+
+        if (!window.db) return;
+
+        adminRedeemBtn.disabled = true;
+        adminRedeemBtn.textContent = 'Marking as used…';
+
+        window.db.collection('referralRewards').doc(phone).set({
+            claimedCount: firebase.firestore.FieldValue.increment(1),
+            lastClaimedAt: firebase.firestore.FieldValue.serverTimestamp()
+        }, { merge: true }).then(function () {
+
+            adminRedeemBtn.textContent = '✅ Marked as Used';
+            renderAdminReferrals(); // refresh the leaderboard so it reflects the new claim
+
+        }).catch(function (err) {
+            adminRedeemBtn.disabled = false;
+            adminRedeemBtn.textContent = 'Mark 1 Reward as Used';
+            alert('Could not mark this reward as used. Please try again.');
+            console.error('Mark-used failed:', err);
+        });
+
+    }
+
+    function closeAdminScanner() {
+        stopAdminScanner();
+        adminQrScannerOverlay.hidden = true;
+    }
+
+    if (adminScanBtn) {
+
+        adminScanBtn.addEventListener('click', function () {
+            adminQrScannerOverlay.hidden = false;
+            adminRedeemBtn.disabled = false;
+            startAdminScanner();
+        });
+
+    }
+
+    if (adminQrScannerClose) {
+        adminQrScannerClose.addEventListener('click', closeAdminScanner);
+    }
+
+    if (adminQrScannerOverlay) {
+        adminQrScannerOverlay.addEventListener('click', function (e) {
+            if (e.target === adminQrScannerOverlay) closeAdminScanner();
+        });
+    }
+
+    // ESC closes the scanner too, matching every other modal on the site --
+    // this was missing before, which was part of why the scanner felt stuck.
+    document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape' && adminQrScannerOverlay && !adminQrScannerOverlay.hidden) {
+            closeAdminScanner();
+        }
+    });
+
+    if (adminScanAgainBtn) {
+
+        adminScanAgainBtn.addEventListener('click', function () {
+            adminRedeemBtn.disabled = false;
+            startAdminScanner();
+        });
+
+    }
+
+    // Builds a referrer leaderboard straight from the existing bookings
+    // cache -- no separate collection needed. For each unique phone number
+    // that appears as someone's referredBy, count how many bookings list
+    // them as the referrer, and look up their own name from their most
+    // recent booking so the list is easy to read at a glance.
+    // Keep in sync with REFERRAL_REWARD_THRESHOLD in the customer-facing
+    // referral check code -- every N completed referrals earns one reward.
+    const ADMIN_REFERRAL_REWARD_THRESHOLD = 3;
+
+    function renderAdminReferrals() {
+
+        const list = document.getElementById('adminReferralsList');
+        if (!list) return;
+
+        const countsByPhone = {};
+
+        allBookings.forEach(function (b) {
+            if (!b.referredBy) return;
+            if (b.status !== 'Done') return; // only completed visits count as a real referral
+            countsByPhone[b.referredBy] = (countsByPhone[b.referredBy] || 0) + 1;
+        });
+
+        const referrerPhones = Object.keys(countsByPhone);
+
+        if (!referrerPhones.length) {
+            list.innerHTML = '<p class="admin-dash-status">No referrals recorded yet.</p>';
+            return;
+        }
+
+        // One read of the whole (small) rewards collection, instead of one
+        // read per referrer -- claimedCount tracks how many rewards each
+        // phone number has already redeemed in person.
+        const claimedLookup = {};
+
+        function buildAndRenderRows() {
+
+            const rows = referrerPhones.map(function (phone) {
+
+                const ownBooking = allBookings.find(function (b) { return b.contact === phone; });
+                const count = countsByPhone[phone];
+                const earned = Math.floor(count / ADMIN_REFERRAL_REWARD_THRESHOLD);
+                const claimed = claimedLookup[phone] || 0;
+                const remaining = Math.max(0, earned - claimed);
+
+                return {
+                    phone: phone,
+                    name: ownBooking ? ownBooking.name : '—',
+                    count: count,
+                    remaining: remaining
+                };
+
+            }).sort(function (a, b) { return b.count - a.count; });
+
+            list.innerHTML =
+                '<table class="admin-referrals-table">' +
+                '<thead><tr><th>Referrer</th><th>Phone</th><th>Referrals</th><th>Reward</th></tr></thead>' +
+                '<tbody>' +
+                rows.map(function (r) {
+                    const rewardCell = r.remaining > 0
+                        ? '<span class="admin-reward-badge admin-reward-available">🎁 ' + r.remaining + ' available</span>'
+                        : '<span class="admin-reward-badge admin-reward-none">—</span>';
+                    return '<tr><td>' + r.name + '</td><td>' + r.phone + '</td>' +
+                        '<td><span class="admin-referral-count-badge">' + r.count + '</span></td>' +
+                        '<td>' + rewardCell + '</td></tr>';
+                }).join('') +
+                '</tbody>' +
+                '</table>';
+
+        }
+
+        if (window.db) {
+
+            window.db.collection('referralRewards').get().then(function (snapshot) {
+                snapshot.forEach(function (doc) {
+                    claimedLookup[doc.id] = doc.data().claimedCount || 0;
+                });
+                buildAndRenderRows();
+            }).catch(function () {
+                buildAndRenderRows(); // still show the list even if this read fails
+            });
+
+        } else {
+            buildAndRenderRows();
+        }
+
+    }
 
     function loadAdminOffDates() {
 

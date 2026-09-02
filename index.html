@@ -144,6 +144,7 @@
             <a href="#pricing">Pricing</a>
             <a href="#gallery">Gallery</a>
             <a href="#contact">Contact</a>
+            <a href="#" id="myReferralsNavLink">My Referrals</a>
 
         </nav>
 
@@ -179,6 +180,9 @@
             <div class="appt-picker-head">
                 <h3>Select an Appointment Time</h3>
                 <p>Pick an available date, then choose a time slot to start your booking.</p>
+                <button type="button" class="referral-promo-banner" id="referralPromoBanner">
+                    🎁 Refer 3 friends and get <strong>50% OFF</strong> your next booking!
+                </button>
             </div>
 
             <div class="appt-picker-body">
@@ -199,6 +203,7 @@
 
                     <div class="appt-cal-legend">
                         <span><span class="appt-cal-legend-dot"></span> Has bookings</span>
+                        <span><span class="appt-cal-legend-dot appt-cal-legend-dot--done"></span> Completed</span>
                         <span><span class="appt-cal-legend-tag">OFF</span> Not available</span>
                     </div>
 
@@ -714,6 +719,10 @@
 
                     <div id="bookingFormFields">
 
+                    <div class="referral-detected-note" id="referralDetectedNote" hidden>
+                        🎁 Referred by <strong id="referralDetectedNumber"></strong> — thanks for coming through a friend!
+                    </div>
+
                     <label>Service</label>
                     <div class="input-icon-wrap">
                         <svg viewBox="0 0 24 24" width="16" height="16"><path fill="none" stroke="currentColor" stroke-width="1.5" d="M9 2h6v3l1.5 2v13a1 1 0 0 1-1 1h-7a1 1 0 0 1-1-1V7L9 5V2z"/></svg>
@@ -837,9 +846,120 @@
                         <button type="button" id="bookingSuccessMessengerBtn" class="btn-outline">💬 Open Messenger</button>
                         <button type="button" id="bookingSuccessDoneBtn" class="btn-primary">Done</button>
 
+                        <div class="referral-box">
+                            <h4>🎁 Invite a Friend</h4>
+                            <p>Your referral code is your own mobile number. Share it, or let a friend scan your code — when they book, we'll know you sent them!</p>
+                            <div class="referral-code-pill" id="referralCodePill">09XXXXXXXXX</div>
+                            <div class="referral-qr" id="referralQrCode"></div>
+                            <button type="button" class="btn-outline referral-copy-btn" id="referralCopyBtn">Copy Referral Link</button>
+                        </div>
+
                     </div>
 
                 </form>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- ===========================
+            MY REFERRALS (check code + count, no booking needed)
+    ============================ -->
+
+    <div class="modal-overlay referral-modal-overlay" id="referralCheckModal">
+
+        <div class="modal-box referral-modal" id="referralModalBox">
+
+            <button type="button" class="referral-close-btn" id="referralCheckModalClose" aria-label="Close">×</button>
+
+            <div class="referral-header">
+                <div class="referral-icon-wrap">🎁</div>
+                <h3>My Referrals</h3>
+                <p class="referral-tagline">Invite friends. Earn rewards.</p>
+            </div>
+
+            <div class="referral-benefits">
+                <div class="referral-benefit-item">
+                    <span class="referral-benefit-icon">🎁</span>
+                    <small>Referral Code</small>
+                </div>
+                <div class="referral-benefit-item">
+                    <span class="referral-benefit-icon">👥</span>
+                    <small>Invite Friends</small>
+                </div>
+                <div class="referral-benefit-item">
+                    <span class="referral-benefit-icon">✨</span>
+                    <small>Earn Rewards</small>
+                </div>
+            </div>
+
+            <div id="referralCheckForm">
+
+                <p class="referral-desc">Enter the mobile number you used when booking to view your referral code and rewards.</p>
+
+                <label for="referralCheckPhone">Mobile Number</label>
+                <div class="referral-input-wrap">
+                    <svg viewBox="0 0 24 24" width="17" height="17"><path fill="none" stroke="currentColor" stroke-width="1.5" d="M6.6 10.8c1.4 2.8 3.8 5.1 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1C10.6 21 3 13.4 3 4c0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.3.2 2.5.6 3.6.1.4 0 .8-.2 1L6.6 10.8z"/></svg>
+                    <input type="tel" id="referralCheckPhone" placeholder="09XXXXXXXXX" maxlength="11" inputmode="numeric">
+                </div>
+                <span class="field-error" id="referralCheckError"></span>
+
+                <button type="button" class="referral-submit-btn" id="referralCheckBtn">Check My Referrals</button>
+
+                <p class="referral-privacy-note">🔒 Your booking information remains private.</p>
+
+            </div>
+
+            <div id="referralCheckNotFound" class="referral-check-not-found" hidden>
+                <p>We couldn't find a referral record for this mobile number. Please make sure you entered the same mobile number you used when booking.</p>
+                <button type="button" class="referral-check-again" id="referralNotFoundBackBtn">← Try another number</button>
+            </div>
+
+            <div id="referralCheckResult" class="referral-result" hidden>
+
+                <div class="referral-result-icon">🎉</div>
+                <h4>Your Referral Details</h4>
+
+                <div class="referral-result-block">
+                    <span class="referral-result-label">Referral Code</span>
+                    <div class="referral-code-display" id="checkReferralCodePill">
+                        <span id="checkReferralCodeText">09XXXXXXXXX</span>
+                        <button type="button" class="referral-code-copy-icon" id="checkReferralCodeCopyIcon" aria-label="Copy referral code" title="Copy referral link">📋</button>
+                    </div>
+                </div>
+
+                <div class="referral-result-stats">
+                    <div class="referral-stat-block">
+                        <span class="referral-stat-number" id="referralCheckCount">0</span>
+                        <span class="referral-stat-label">Friends</span>
+                    </div>
+                    <div class="referral-stat-block">
+                        <span class="referral-stat-status" id="referralCheckStatus">New</span>
+                        <span class="referral-stat-label">Status</span>
+                    </div>
+                </div>
+
+                <span class="referral-result-label">Your Referral QR</span>
+                <div class="referral-qr-card">
+                    <div class="referral-qr" id="checkReferralQrCode"></div>
+                </div>
+
+                <div class="referral-reward-banner" id="referralRewardBanner" hidden>
+                    <div class="referral-reward-icon">🎉</div>
+                    <h5>Congratulations!</h5>
+                    <p id="referralRewardText">You've referred 3+ friends and earned <strong>50% OFF</strong> your next booking. Show this QR code to our staff to claim it.</p>
+                    <div class="referral-qr-card referral-qr-card--reward">
+                        <div class="referral-reward-qr" id="referralRewardQr"></div>
+                    </div>
+                    <button type="button" class="referral-download-btn" id="referralRewardDownloadBtn">⬇ Download QR Code</button>
+                </div>
+
+                <div class="referral-result-actions">
+                    <button type="button" class="referral-share-btn" id="checkReferralCopyBtn">Share My Code</button>
+                    <button type="button" class="referral-check-again" id="referralCheckAgainBtn">← Back</button>
+                </div>
 
             </div>
 
@@ -943,6 +1063,7 @@
             <div class="admin-view-tabs">
                 <button type="button" id="adminTabTable" class="admin-view-tab is-active">Table View</button>
                 <button type="button" id="adminTabCalendar" class="admin-view-tab">Calendar View</button>
+                <button type="button" id="adminTabReferrals" class="admin-view-tab">Referrals</button>
             </div>
 
             <div class="admin-toolbar" id="adminToolbar">
@@ -999,6 +1120,44 @@
 
             </div>
 
+            <div class="admin-referrals-view" id="adminReferralsView" style="display:none;">
+
+                <p class="admin-referrals-note">Shows every phone number that has referred at least one customer. Only bookings you've marked "Done" count as a real referral — a Pending booking (even with a made-up number) doesn't count until the person actually shows up and gets serviced. Every 3 completed referrals earns a 50% OFF reward.</p>
+
+                <button type="button" class="admin-scan-btn" id="adminScanBtn">📷 Scan Customer's QR to Redeem</button>
+
+                <div class="admin-referrals-list" id="adminReferralsList">
+                    <p class="admin-dash-status">Loading referral data…</p>
+                </div>
+
+            </div>
+
+            <div class="admin-qr-scanner-overlay" id="adminQrScannerOverlay" hidden>
+
+                <div class="admin-qr-scanner-box">
+
+                    <button type="button" class="admin-qr-scanner-close" id="adminQrScannerClose" aria-label="Close scanner">×</button>
+
+                    <h4>Scan Customer's Reward QR</h4>
+                    <p class="admin-qr-scanner-sub">Point the camera at the QR code on the customer's phone.</p>
+
+                    <div id="adminQrReaderRegion"></div>
+
+                    <div id="adminScanResult" class="admin-scan-result" hidden>
+
+                        <p class="admin-scan-result-name" id="adminScanResultName">—</p>
+                        <p class="admin-scan-result-detail" id="adminScanResultDetail">—</p>
+
+                        <button type="button" class="admin-redeem-btn" id="adminRedeemBtn" hidden>Mark 1 Reward as Used</button>
+
+                        <button type="button" class="admin-scan-again-btn" id="adminScanAgainBtn">Scan Another</button>
+
+                    </div>
+
+                </div>
+
+            </div>
+
         </div>
 
     </div>
@@ -1009,6 +1168,8 @@
             firebase-setup-guide.txt for step-by-step instructions.
     ============================ -->
 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
