@@ -4249,19 +4249,19 @@ h1, h2, h3, h4{
 
 .referral-promo-banner{
 
-    display:inline-flex;
-    align-items:center;
-    gap:6px;
+    display:inline-block;
     background:linear-gradient(135deg, rgba(212,162,90,.16), rgba(122,32,58,.08));
     border:1px solid rgba(212,162,90,.4);
     color:#7A203A;
     font-family:'Work Sans', sans-serif;
     font-size:13.5px;
     font-weight:500;
+    line-height:1.5;
     padding:10px 20px;
-    border-radius:30px;
+    border-radius:20px;
     margin-bottom:28px;
     cursor:pointer;
+    text-align:left;
     transition:transform .18s ease, box-shadow .18s ease, background .18s ease;
 
 }
@@ -4779,44 +4779,6 @@ h1, h2, h3, h4{
     font-weight:600;
 }
 
-.admin-booking-table{
-    width:100%;
-    border-collapse:collapse;
-    font-size:13px;
-}
-
-.admin-booking-table th{
-    text-align:left;
-    font-size:11px;
-    letter-spacing:.5px;
-    text-transform:uppercase;
-    color:#B8824F;
-    padding:10px 12px;
-    border-bottom:1.5px solid #F1E1D3;
-    position:sticky;
-    top:0;
-    background:#FFFAF8;
-}
-
-.admin-booking-table td{
-    padding:12px;
-    border-bottom:1px solid #F5EBE1;
-    color:#3A2624;
-    vertical-align:top;
-}
-
-.admin-booking-table tr:hover td{
-    background:#FBEFE3;
-}
-
-.admin-booking-notes{
-    color:#8A6E60;
-    font-style:italic;
-    max-width:220px;
-
-    font-weight:600;
-}
-
 .admin-referrals-view{
 
     background:#fff;
@@ -5072,13 +5034,71 @@ h1, h2, h3, h4{
 
 @media(max-width:640px){
 
-    .admin-booking-table{
-        font-size:12px;
+    #adminDashboardModal .admin-dash-body{
+        flex:none;
+        overflow:visible;
     }
 
-    .admin-booking-table th,
+    .admin-booking-table{
+        border-collapse:separate;
+        border-spacing:0 12px;
+    }
+
+    .admin-booking-table thead{
+        position:absolute;
+        width:1px;
+        height:1px;
+        overflow:hidden;
+        clip:rect(0 0 0 0);
+        white-space:nowrap;
+    }
+
+    .admin-booking-table,
+    .admin-booking-table tbody,
+    .admin-booking-table tr,
     .admin-booking-table td{
-        padding:8px;
+        display:block;
+        width:100%;
+    }
+
+    .admin-booking-table tr{
+        background:#fff;
+        border:1px solid #E8DDD6;
+        border-radius:14px;
+        padding:6px 14px;
+        animation:none;
+    }
+
+    .admin-booking-table td{
+        padding:9px 0;
+        border-bottom:1px solid #F5EBE1;
+        text-align:left;
+        white-space:normal;
+        overflow:visible;
+        text-overflow:clip;
+    }
+
+    .admin-booking-table td:last-child{
+        border-bottom:none;
+    }
+
+    .admin-booking-table td::before{
+        content:attr(data-label);
+        display:block;
+        font-size:10px;
+        font-weight:700;
+        text-transform:uppercase;
+        letter-spacing:.4px;
+        color:#B8824F;
+        margin-bottom:3px;
+    }
+
+    .admin-booking-notes{
+        max-width:none;
+    }
+
+    .admin-row-actions{
+        justify-content:flex-start;
     }
 
 }

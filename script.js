@@ -2068,23 +2068,24 @@ document.addEventListener('DOMContentLoaded', function () {
 
             const notesCell = document.createElement('td');
             notesCell.className = 'admin-booking-notes';
+            notesCell.setAttribute('data-label', 'Notes');
             notesCell.textContent = b.notes || '—';
             notesCell.title = b.notes || '';
 
             const priceLabel = b.price != null ? '₱' + b.price : 'Add price';
 
             row.innerHTML =
-                '<td class="admin-booking-id" title="' + b.id + '">' + b.id.slice(0, 8) + '</td>' +
-                '<td>' + b.name + '</td>' +
-                '<td>' + formatBookingDate(b.date) + '</td>' +
-                '<td>' + formatBookingTime(b.time) + '</td>' +
-                '<td>' + b.contact + '</td>' +
-                '<td>' + (b.referredBy ? b.referredBy : '—') + '</td>' +
-                '<td>' + b.service + '</td>' +
-                '<td><button type="button" class="admin-price-cell" data-id="' + b.id + '">' + priceLabel + '</button></td>' +
-                '<td></td>' +
-                '<td><button type="button" class="admin-status-badge admin-status-' + b.status + '" data-id="' + b.id + '">' + b.status + '</button></td>' +
-                '<td>' +
+                '<td class="admin-booking-id" data-label="Booking ID" title="' + b.id + '">' + b.id.slice(0, 8) + '</td>' +
+                '<td data-label="Name">' + b.name + '</td>' +
+                '<td data-label="Date">' + formatBookingDate(b.date) + '</td>' +
+                '<td data-label="Time">' + formatBookingTime(b.time) + '</td>' +
+                '<td data-label="Contact">' + b.contact + '</td>' +
+                '<td data-label="Referred By">' + (b.referredBy ? b.referredBy : '—') + '</td>' +
+                '<td data-label="Service">' + b.service + '</td>' +
+                '<td data-label="Price"><button type="button" class="admin-price-cell" data-id="' + b.id + '">' + priceLabel + '</button></td>' +
+                '<td data-label="Notes"></td>' +
+                '<td data-label="Done?"><button type="button" class="admin-status-badge admin-status-' + b.status + '" data-id="' + b.id + '">' + b.status + '</button></td>' +
+                '<td data-label="Actions">' +
                 '<div class="admin-row-actions">' +
                 '<button type="button" class="admin-icon-btn admin-icon-view" data-id="' + b.id + '" title="View" aria-label="View">' +
                 '<svg viewBox="0 0 24 24" width="15" height="15"><path fill="none" stroke="currentColor" stroke-width="1.6" d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>' +
@@ -2430,7 +2431,6 @@ document.addEventListener('DOMContentLoaded', function () {
                     if (!phone || !/^09\d{9}$/.test(phone)) return;
 
                     currentScannedPhone = decodedText;
-                    stopAdminScanner();
                     showAdminScanResult(phone);
 
                 },
@@ -2495,8 +2495,15 @@ document.addEventListener('DOMContentLoaded', function () {
             }
 
         }).catch(function (err) {
-            adminScanResultName.textContent = 'Something went wrong.';
-            adminScanResultDetail.textContent = 'Please try scanning again.';
+
+            if (err && err.code === 'permission-denied') {
+                adminScanResultName.textContent = 'Missing Firestore permission.';
+                adminScanResultDetail.textContent = 'Your Firestore rules need read/write access to "referralRewards" and update access to "bookedSlots" for signed-in admins. See the setup notes for the exact rule to add.';
+            } else {
+                adminScanResultName.textContent = 'Something went wrong.';
+                adminScanResultDetail.textContent = 'Please try scanning again.';
+            }
+
             console.error('Reward lookup failed:', err);
         });
 
@@ -2562,8 +2569,15 @@ document.addEventListener('DOMContentLoaded', function () {
     if (adminScanAgainBtn) {
 
         adminScanAgainBtn.addEventListener('click', function () {
+
             adminRedeemBtn.disabled = false;
-            startAdminScanner();
+            adminScanResultEl.hidden = true;
+            currentScannedPhone = null;
+
+            // If the camera is somehow no longer running (e.g. it was lost
+            // or never started), fall back to a full (re)start.
+            if (!html5QrScanner) startAdminScanner();
+
         });
 
     }
