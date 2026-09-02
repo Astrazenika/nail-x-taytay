@@ -2005,6 +2005,14 @@ document.addEventListener('DOMContentLoaded', function () {
 
         return allBookings.filter(function (b) {
 
+            // Table View = active bookings only; Archive = completed ones.
+            // This keeps the working list short once a booking is Done.
+            if (adminArchiveMode) {
+                if (b.status !== 'Done') return false;
+            } else {
+                if (b.status === 'Done') return false;
+            }
+
             if (statusFilter && b.status !== statusFilter) return false;
             if (serviceFilter && b.service !== serviceFilter) return false;
 
@@ -2040,10 +2048,14 @@ document.addEventListener('DOMContentLoaded', function () {
 
         if (!rows.length) {
 
+            const emptyMsg = adminArchiveMode
+                ? "No completed bookings yet. Once you mark a booking \u201cDone,\u201d it'll show up here."
+                : 'No bookings match your search or filters.';
+
             adminDashBody.innerHTML =
                 '<div class="admin-empty-state">' +
                 '<div class="admin-empty-icon"><svg viewBox="0 0 24 24" width="28" height="28"><circle cx="11" cy="11" r="7" fill="none" stroke="currentColor" stroke-width="1.6"/><path stroke="currentColor" stroke-width="1.6" d="m21 21-4.3-4.3"/></svg></div>' +
-                '<p>No bookings match your search or filters.</p>' +
+                '<p>' + emptyMsg + '</p>' +
                 '</div>';
             return;
 
@@ -2310,6 +2322,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const adminTabTable = document.getElementById('adminTabTable');
     const adminTabCalendar = document.getElementById('adminTabCalendar');
     const adminTabReferrals = document.getElementById('adminTabReferrals');
+    const adminTabArchive = document.getElementById('adminTabArchive');
     const adminToolbar = document.getElementById('adminToolbar');
     const adminCalendarView = document.getElementById('adminCalendarView');
     const adminReferralsView = document.getElementById('adminReferralsView');
@@ -2324,29 +2337,38 @@ document.addEventListener('DOMContentLoaded', function () {
     let adminCalMonth = new Date().getMonth();
     let adminCalSelectedDate = null;
 
+    let adminArchiveMode = false; // true = Archive tab (Done bookings only)
+
     function switchAdminView(view) {
 
         const showCalendar = view === 'calendar';
         const showReferrals = view === 'referrals';
-        const showTable = !showCalendar && !showReferrals;
+        const showArchive = view === 'archive';
+        const showTable = !showCalendar && !showReferrals && !showArchive;
+
+        adminArchiveMode = showArchive;
 
         adminTabTable.classList.toggle('is-active', showTable);
         adminTabCalendar.classList.toggle('is-active', showCalendar);
         if (adminTabReferrals) adminTabReferrals.classList.toggle('is-active', showReferrals);
+        if (adminTabArchive) adminTabArchive.classList.toggle('is-active', showArchive);
 
-        adminToolbar.style.display = showTable ? 'flex' : 'none';
-        adminDashBody.style.display = showTable ? 'block' : 'none';
+        const showList = showTable || showArchive;
+        adminToolbar.style.display = showList ? 'flex' : 'none';
+        adminDashBody.style.display = showList ? 'block' : 'none';
         adminCalendarView.style.display = showCalendar ? 'grid' : 'none';
         if (adminReferralsView) adminReferralsView.style.display = showReferrals ? 'block' : 'none';
 
         if (showCalendar) loadAdminOffDates();
         if (showReferrals) renderAdminReferrals();
+        if (showList) renderBookingTable();
 
     }
 
     if (adminTabTable) adminTabTable.addEventListener('click', function () { switchAdminView('table'); });
     if (adminTabCalendar) adminTabCalendar.addEventListener('click', function () { switchAdminView('calendar'); });
     if (adminTabReferrals) adminTabReferrals.addEventListener('click', function () { switchAdminView('referrals'); });
+    if (adminTabArchive) adminTabArchive.addEventListener('click', function () { switchAdminView('archive'); });
 
     // ===============================
     // REWARD QR SCANNER -- staff scan a customer's reward QR (their phone's
@@ -2630,6 +2652,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     phone: phone,
                     name: ownBooking ? ownBooking.name : '—',
                     count: count,
+                    claimed: claimed,
                     remaining: remaining
                 };
 
@@ -2640,12 +2663,23 @@ document.addEventListener('DOMContentLoaded', function () {
                 '<thead><tr><th>Referrer</th><th>Phone</th><th>Referrals</th><th>Reward</th></tr></thead>' +
                 '<tbody>' +
                 rows.map(function (r) {
-                    const rewardCell = r.remaining > 0
-                        ? '<span class="admin-reward-badge admin-reward-available">🎁 ' + r.remaining + ' available</span>'
-                        : '<span class="admin-reward-badge admin-reward-none">—</span>';
-                    return '<tr><td>' + r.name + '</td><td>' + r.phone + '</td>' +
-                        '<td><span class="admin-referral-count-badge">' + r.count + '</span></td>' +
-                        '<td>' + rewardCell + '</td></tr>';
+
+                    let rewardCell = '<span class="admin-reward-badge admin-reward-none">—</span>';
+
+                    if (r.remaining > 0 && r.claimed > 0) {
+                        rewardCell = '<span class="admin-reward-badge admin-reward-available">🎁 ' + r.remaining + ' available</span>' +
+                            '<span class="admin-reward-badge admin-reward-used">' + r.claimed + ' used</span>';
+                    } else if (r.remaining > 0) {
+                        rewardCell = '<span class="admin-reward-badge admin-reward-available">🎁 ' + r.remaining + ' available</span>';
+                    } else if (r.claimed > 0) {
+                        rewardCell = '<span class="admin-reward-badge admin-reward-used">' + r.claimed + ' used</span>';
+                    }
+
+                    return '<tr>' +
+                        '<td data-label="Referrer">' + r.name + '</td>' +
+                        '<td data-label="Phone">' + r.phone + '</td>' +
+                        '<td data-label="Referrals"><span class="admin-referral-count-badge">' + r.count + '</span></td>' +
+                        '<td data-label="Reward">' + rewardCell + '</td></tr>';
                 }).join('') +
                 '</tbody>' +
                 '</table>';

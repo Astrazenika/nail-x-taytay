@@ -4873,6 +4873,12 @@ h1, h2, h3, h4{
     color:#8A5A1E;
 }
 
+.admin-reward-used{
+    background:rgba(122,32,58,.08);
+    color:#8A6E60;
+    margin-left:6px;
+}
+
 .admin-reward-none{
     color:#C4B6AC;
 }
@@ -5039,12 +5045,14 @@ h1, h2, h3, h4{
         overflow:visible;
     }
 
-    .admin-booking-table{
+    .admin-booking-table,
+    .admin-referrals-table{
         border-collapse:separate;
         border-spacing:0 12px;
     }
 
-    .admin-booking-table thead{
+    .admin-booking-table thead,
+    .admin-referrals-table thead{
         position:absolute;
         width:1px;
         height:1px;
@@ -5056,12 +5064,17 @@ h1, h2, h3, h4{
     .admin-booking-table,
     .admin-booking-table tbody,
     .admin-booking-table tr,
-    .admin-booking-table td{
+    .admin-booking-table td,
+    .admin-referrals-table,
+    .admin-referrals-table tbody,
+    .admin-referrals-table tr,
+    .admin-referrals-table td{
         display:block;
         width:100%;
     }
 
-    .admin-booking-table tr{
+    .admin-booking-table tr,
+    .admin-referrals-table tr{
         background:#fff;
         border:1px solid #E8DDD6;
         border-radius:14px;
@@ -5069,7 +5082,8 @@ h1, h2, h3, h4{
         animation:none;
     }
 
-    .admin-booking-table td{
+    .admin-booking-table td,
+    .admin-referrals-table td{
         padding:9px 0;
         border-bottom:1px solid #F5EBE1;
         text-align:left;
@@ -5078,11 +5092,13 @@ h1, h2, h3, h4{
         text-overflow:clip;
     }
 
-    .admin-booking-table td:last-child{
+    .admin-booking-table td:last-child,
+    .admin-referrals-table td:last-child{
         border-bottom:none;
     }
 
-    .admin-booking-table td::before{
+    .admin-booking-table td::before,
+    .admin-referrals-table td::before{
         content:attr(data-label);
         display:block;
         font-size:10px;
@@ -5095,6 +5111,15 @@ h1, h2, h3, h4{
 
     .admin-booking-notes{
         max-width:none;
+    }
+
+    .admin-view-tabs{
+        flex-wrap:wrap;
+        height:auto;
+    }
+
+    .admin-view-tab{
+        white-space:nowrap;
     }
 
     .admin-row-actions{
