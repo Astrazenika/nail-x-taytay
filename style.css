@@ -300,6 +300,116 @@ img{
     display:none !important;
 }
 
+.pwa-install-banner{
+
+    position:fixed;
+    left:12px;
+    right:12px;
+    bottom:100px;
+    z-index:1500;
+    display:flex;
+    align-items:center;
+    gap:12px;
+    background:#FFF8F2;
+    border:1.5px solid #D4A25A;
+    border-radius:16px;
+    padding:12px 14px;
+    box-shadow:0 14px 34px rgba(58,38,36,.22);
+    animation:pwaBannerIn .3s ease-out;
+
+}
+
+.pwa-install-banner[hidden]{
+    display:none !important;
+}
+
+@keyframes pwaBannerIn{
+    from{ opacity:0; transform:translateY(16px); }
+    to{ opacity:1; transform:translateY(0); }
+}
+
+.pwa-install-banner-icon{
+    font-size:26px;
+    flex-shrink:0;
+}
+
+.pwa-install-banner-text{
+    flex:1;
+    min-width:0;
+    display:flex;
+    flex-direction:column;
+    gap:2px;
+}
+
+.pwa-install-banner-text strong{
+    font-size:13.5px;
+    color:#3A2624;
+    font-family:'Playfair Display', serif;
+}
+
+.pwa-install-banner-text span{
+    font-size:11.5px;
+    color:#7B6F67;
+    line-height:1.35;
+}
+
+.pwa-install-banner-btn{
+    flex-shrink:0;
+    background:#7A203A;
+    color:#fff;
+    border:none;
+    font-size:12px;
+    font-weight:700;
+    letter-spacing:.3px;
+    padding:9px 16px;
+    border-radius:12px;
+    cursor:pointer;
+    transition:background .18s ease;
+}
+
+.pwa-install-banner-btn:hover{
+    background:#8A2745;
+}
+
+.pwa-install-banner-close{
+    flex-shrink:0;
+    width:26px;
+    height:26px;
+    border-radius:50%;
+    background:rgba(122,32,58,.08);
+    border:none;
+    color:#7A203A;
+    font-size:15px;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+}
+
+@media (max-width:480px){
+
+    .pwa-install-banner{
+        flex-wrap:wrap;
+        padding:12px;
+    }
+
+    .pwa-install-banner-text{
+        order:1;
+        width:calc(100% - 60px);
+    }
+
+    .pwa-install-banner-close{
+        order:2;
+    }
+
+    .pwa-install-banner-btn{
+        order:3;
+        width:100%;
+        margin-top:8px;
+    }
+
+}
+
 .install-app-btn:hover{
     background:#8A2745;
     transform:translateY(-1px);

@@ -2967,12 +2967,29 @@ if ('serviceWorker' in navigator) {
 document.addEventListener('DOMContentLoaded', function () {
 
     const installBtn = document.getElementById('installAppBtn');
-    if (!installBtn) return;
+    const banner = document.getElementById('pwaInstallBanner');
+    const bannerInstallBtn = document.getElementById('pwaInstallBannerBtn');
+    const bannerCloseBtn = document.getElementById('pwaInstallBannerClose');
+
+    if (!installBtn && !banner) return;
 
     let deferredInstallPrompt = null;
 
     const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
     const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+
+    let dismissed = false;
+    try { dismissed = localStorage.getItem('nailxtaytay_install_dismissed') === '1'; } catch (e) {}
+
+    function showInstallUI() {
+        if (installBtn) installBtn.hidden = false;
+        if (banner && !dismissed) banner.hidden = false;
+    }
+
+    function hideInstallUI() {
+        if (installBtn) installBtn.hidden = true;
+        if (banner) banner.hidden = true;
+    }
 
     // Already installed and running as an app -- nothing to offer.
     if (isStandalone) return;
@@ -2981,19 +2998,19 @@ document.addEventListener('DOMContentLoaded', function () {
     window.addEventListener('beforeinstallprompt', function (e) {
         e.preventDefault();
         deferredInstallPrompt = e;
-        installBtn.hidden = false;
+        showInstallUI();
     });
 
     window.addEventListener('appinstalled', function () {
-        installBtn.hidden = true;
+        hideInstallUI();
         deferredInstallPrompt = null;
     });
 
-    // iOS Safari never fires beforeinstallprompt -- show the button
+    // iOS Safari never fires beforeinstallprompt -- show the prompt
     // there too, with manual step-by-step instructions instead.
-    if (isIOS) installBtn.hidden = false;
+    if (isIOS) showInstallUI();
 
-    installBtn.addEventListener('click', function () {
+    function runInstallFlow() {
 
         if (deferredInstallPrompt) {
 
@@ -3020,6 +3037,16 @@ document.addEventListener('DOMContentLoaded', function () {
 
         }
 
-    });
+    }
+
+    if (installBtn) installBtn.addEventListener('click', runInstallFlow);
+    if (bannerInstallBtn) bannerInstallBtn.addEventListener('click', runInstallFlow);
+
+    if (bannerCloseBtn) {
+        bannerCloseBtn.addEventListener('click', function () {
+            if (banner) banner.hidden = true;
+            try { localStorage.setItem('nailxtaytay_install_dismissed', '1'); } catch (e) {}
+        });
+    }
 
 });
