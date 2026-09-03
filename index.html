@@ -28,8 +28,17 @@
         content="Home-based nail artist in Taytay, Rizal. Gel manicure, nail extensions, BIAB, custom nail art, and gel pedicure by appointment.">
     <meta name="twitter:image" content="https://astrazenika.github.io/nail-x-taytay/images/hero-nails.jpg">
 
-    <link rel="icon" type="image/jpeg" href="images/hero-nails.jpg">
-    <link rel="apple-touch-icon" href="images/hero-nails.jpg">
+    <link rel="icon" type="image/png" href="images/icon-192.png">
+    <link rel="apple-touch-icon" href="images/apple-touch-icon.png">
+
+    <!-- PWA: lets people install this site as an app on their phone,
+         so they can open it straight from their home screen without
+         going through Chrome each time. -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#7A203A">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Nail X Taytay">
 
     <link rel="stylesheet" href="style.css">
 
@@ -145,6 +154,7 @@
             <a href="#gallery">Gallery</a>
             <a href="#contact">Contact</a>
             <a href="#" id="myReferralsNavLink">My Referrals</a>
+            <button type="button" id="installAppBtn" class="install-app-btn" hidden>📲 Install App</button>
 
         </nav>
 

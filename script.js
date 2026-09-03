@@ -2951,3 +2951,75 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
 });
+
+// ===============================
+// PWA INSTALL -- lets people add this site to their phone's home screen
+// so it opens like a real app (no address bar), without going through
+// Chrome every time.
+// ===============================
+
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', function () {
+        navigator.serviceWorker.register('service-worker.js').catch(function () {});
+    });
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+
+    const installBtn = document.getElementById('installAppBtn');
+    if (!installBtn) return;
+
+    let deferredInstallPrompt = null;
+
+    const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+
+    // Already installed and running as an app -- nothing to offer.
+    if (isStandalone) return;
+
+    // Android/Chrome: browser tells us installation is available.
+    window.addEventListener('beforeinstallprompt', function (e) {
+        e.preventDefault();
+        deferredInstallPrompt = e;
+        installBtn.hidden = false;
+    });
+
+    window.addEventListener('appinstalled', function () {
+        installBtn.hidden = true;
+        deferredInstallPrompt = null;
+    });
+
+    // iOS Safari never fires beforeinstallprompt -- show the button
+    // there too, with manual step-by-step instructions instead.
+    if (isIOS) installBtn.hidden = false;
+
+    installBtn.addEventListener('click', function () {
+
+        if (deferredInstallPrompt) {
+
+            deferredInstallPrompt.prompt();
+            deferredInstallPrompt.userChoice.finally(function () {
+                deferredInstallPrompt = null;
+            });
+
+        } else if (isIOS) {
+
+            alert(
+                'To install this app on your iPhone:\n\n' +
+                '1. Tap the Share button (square with an arrow up) at the bottom of Safari.\n' +
+                '2. Scroll down and tap "Add to Home Screen".\n' +
+                '3. Tap "Add".'
+            );
+
+        } else {
+
+            alert(
+                'Your browser doesn\'t support one-tap install.\n\n' +
+                'Open this site in Chrome for the smoothest experience, then use the menu (⋮) → "Add to Home screen" or "Install app".'
+            );
+
+        }
+
+    });
+
+});
