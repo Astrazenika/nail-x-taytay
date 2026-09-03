@@ -132,16 +132,6 @@
             HEADER
     ============================ -->
 
-    <div class="pwa-install-banner" id="pwaInstallBanner" hidden>
-        <div class="pwa-install-banner-icon">📲</div>
-        <div class="pwa-install-banner-text">
-            <strong>Install Nail X Taytay</strong>
-            <span>Add our app to your home screen for faster booking.</span>
-        </div>
-        <button type="button" class="pwa-install-banner-btn" id="pwaInstallBannerBtn">Install</button>
-        <button type="button" class="pwa-install-banner-close" id="pwaInstallBannerClose" aria-label="Dismiss">×</button>
-    </div>
-
     <header class="header">
 
         <div class="logo">
@@ -646,8 +636,14 @@
     </footer>
 
     <a href="#home" class="floating-book" id="floatingBookBtn">
-        <svg viewBox="0 0 24 24" width="22" height="22"><path fill="currentColor" d="M4 4h16v12H7l-3 3V4z"/></svg>
-        <span>Book Now</span>
+        <span class="floating-book-inner floating-book-inner--book">
+            <svg viewBox="0 0 24 24" width="22" height="22"><path fill="currentColor" d="M4 4h16v12H7l-3 3V4z"/></svg>
+            <span>Book Now</span>
+        </span>
+        <span class="floating-book-inner floating-book-inner--install" hidden>
+            <span class="floating-book-install-icon">📲</span>
+            <span>Install App</span>
+        </span>
     </a>
 
     <!-- ===========================

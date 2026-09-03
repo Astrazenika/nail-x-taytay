@@ -166,6 +166,13 @@ document.addEventListener('DOMContentLoaded', function () {
 
             e.preventDefault();
 
+            // While an install prompt is available, this button offers
+            // that instead of jumping to the booking calendar.
+            if (floatingBookBtn.dataset.mode === 'install' && typeof window.runPwaInstallFlow === 'function') {
+                window.runPwaInstallFlow();
+                return;
+            }
+
             const dateEl = document.getElementById('bookingDate');
             const timeEl = document.getElementById('bookingTime');
 
@@ -2967,28 +2974,42 @@ if ('serviceWorker' in navigator) {
 document.addEventListener('DOMContentLoaded', function () {
 
     const installBtn = document.getElementById('installAppBtn');
-    const banner = document.getElementById('pwaInstallBanner');
-    const bannerInstallBtn = document.getElementById('pwaInstallBannerBtn');
-    const bannerCloseBtn = document.getElementById('pwaInstallBannerClose');
+    const floatBtn = document.getElementById('floatingBookBtn');
+    const floatBookInner = floatBtn ? floatBtn.querySelector('.floating-book-inner--book') : null;
+    const floatInstallInner = floatBtn ? floatBtn.querySelector('.floating-book-inner--install') : null;
 
-    if (!installBtn && !banner) return;
+    if (!installBtn && !floatBtn) return;
 
     let deferredInstallPrompt = null;
 
     const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
     const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
 
-    let dismissed = false;
-    try { dismissed = localStorage.getItem('nailxtaytay_install_dismissed') === '1'; } catch (e) {}
-
     function showInstallUI() {
+
         if (installBtn) installBtn.hidden = false;
-        if (banner && !dismissed) banner.hidden = false;
+
+        // Swap the floating button into "install" mode -- same circle,
+        // same spot, just offering the app install instead of booking
+        // while it's available.
+        if (floatBtn && floatBookInner && floatInstallInner) {
+            floatBtn.dataset.mode = 'install';
+            floatBookInner.hidden = true;
+            floatInstallInner.hidden = false;
+        }
+
     }
 
     function hideInstallUI() {
+
         if (installBtn) installBtn.hidden = true;
-        if (banner) banner.hidden = true;
+
+        if (floatBtn && floatBookInner && floatInstallInner) {
+            delete floatBtn.dataset.mode;
+            floatBookInner.hidden = false;
+            floatInstallInner.hidden = true;
+        }
+
     }
 
     // Already installed and running as an app -- nothing to offer.
@@ -3039,14 +3060,10 @@ document.addEventListener('DOMContentLoaded', function () {
 
     }
 
-    if (installBtn) installBtn.addEventListener('click', runInstallFlow);
-    if (bannerInstallBtn) bannerInstallBtn.addEventListener('click', runInstallFlow);
+    // Exposed so the floating button's own click handler (registered
+    // elsewhere) can trigger this when it's in install mode.
+    window.runPwaInstallFlow = runInstallFlow;
 
-    if (bannerCloseBtn) {
-        bannerCloseBtn.addEventListener('click', function () {
-            if (banner) banner.hidden = true;
-            try { localStorage.setItem('nailxtaytay_install_dismissed', '1'); } catch (e) {}
-        });
-    }
+    if (installBtn) installBtn.addEventListener('click', runInstallFlow);
 
 });
