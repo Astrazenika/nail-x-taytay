@@ -296,6 +296,10 @@ img{
 
 }
 
+.install-app-btn[hidden]{
+    display:none !important;
+}
+
 .install-app-btn:hover{
     background:#8A2745;
     transform:translateY(-1px);
