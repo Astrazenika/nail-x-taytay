@@ -2864,7 +2864,17 @@ img{
 
     .navbar.open{
 
-        max-height:400px;
+        max-height:80vh;
+        overflow-y:auto;
+
+    }
+
+    .navbar .install-app-btn{
+
+        display:flex;
+        width:calc(100% - 48px);
+        justify-content:center;
+        margin:14px 24px 20px;
 
     }
 
