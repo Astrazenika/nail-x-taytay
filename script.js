@@ -2072,11 +2072,7 @@ document.addEventListener('DOMContentLoaded', function () {
         table.className = 'admin-booking-table';
 
         const thead = document.createElement('thead');
-        thead.innerHTML =
-            '<tr>' +
-            '<th>Booking ID</th><th>Name</th><th>Date</th><th>Time</th><th>Contact</th><th>Referred By</th>' +
-            '<th>Service</th><th>Price</th><th>Notes</th><th>Done?</th><th>Actions</th>' +
-            '</tr>';
+        thead.innerHTML = '<tr><th>Name</th><th>Date</th><th>Time</th></tr>';
         table.appendChild(thead);
 
         const tbody = document.createElement('tbody');
@@ -2084,38 +2080,18 @@ document.addEventListener('DOMContentLoaded', function () {
         rows.forEach(function (b) {
 
             const row = document.createElement('tr');
-
-            const notesCell = document.createElement('td');
-            notesCell.className = 'admin-booking-notes';
-            notesCell.setAttribute('data-label', 'Notes');
-            notesCell.textContent = b.notes || '—';
-            notesCell.title = b.notes || '';
-
-            const priceLabel = b.price != null ? '₱' + b.price : 'Add price';
+            row.className = 'admin-booking-row-compact';
+            row.setAttribute('data-id', b.id);
 
             row.innerHTML =
-                '<td class="admin-booking-id" data-label="Booking ID" title="' + b.id + '">' + b.id.slice(0, 8) + '</td>' +
-                '<td data-label="Name">' + b.name + '</td>' +
+                '<td data-label="Name">' +
+                '<span class="admin-row-name-cell">' +
+                '<span class="admin-row-status-dot admin-status-' + b.status + '"></span>' +
+                '<span>' + b.name + '</span>' +
+                '</span>' +
+                '</td>' +
                 '<td data-label="Date">' + formatBookingDate(b.date) + '</td>' +
-                '<td data-label="Time">' + formatBookingTime(b.time) + '</td>' +
-                '<td data-label="Contact">' + b.contact + '</td>' +
-                '<td data-label="Referred By">' + (b.referredBy ? b.referredBy : '—') + '</td>' +
-                '<td data-label="Service">' + b.service + '</td>' +
-                '<td data-label="Price"><button type="button" class="admin-price-cell" data-id="' + b.id + '">' + priceLabel + '</button></td>' +
-                '<td data-label="Notes"></td>' +
-                '<td data-label="Done?"><button type="button" class="admin-status-badge admin-status-' + b.status + '" data-id="' + b.id + '">' + b.status + '</button></td>' +
-                '<td data-label="Actions">' +
-                '<div class="admin-row-actions">' +
-                '<button type="button" class="admin-icon-btn admin-icon-view" data-id="' + b.id + '" title="View" aria-label="View">' +
-                '<svg viewBox="0 0 24 24" width="15" height="15"><path fill="none" stroke="currentColor" stroke-width="1.6" d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>' +
-                '</button>' +
-                '<button type="button" class="admin-icon-btn admin-icon-delete" data-id="' + b.id + '" title="Delete" aria-label="Delete">' +
-                '<svg viewBox="0 0 24 24" width="15" height="15"><path fill="none" stroke="currentColor" stroke-width="1.6" d="M4 7h16M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2m2 0-1 13a1 1 0 0 1-1 1H8a1 1 0 0 1-1-1L6 7"/></svg>' +
-                '</button>' +
-                '</div>' +
-                '</td>';
-
-            row.children[8].replaceWith(notesCell);
+                '<td data-label="Time">' + formatBookingTime(b.time) + ' <span class="admin-row-chevron">›</span></td>';
 
             tbody.appendChild(row);
 
@@ -2124,21 +2100,9 @@ document.addEventListener('DOMContentLoaded', function () {
         table.appendChild(tbody);
         adminDashBody.appendChild(table);
 
-        // Wire per-row actions (view / edit price / toggle done / delete)
-        tbody.querySelectorAll('.admin-icon-view').forEach(function (btn) {
-            btn.addEventListener('click', function () { viewBooking(btn.getAttribute('data-id')); });
-        });
-
-        tbody.querySelectorAll('.admin-status-badge').forEach(function (btn) {
-            btn.addEventListener('click', function () { toggleBookingDone(btn.getAttribute('data-id')); });
-        });
-
-        tbody.querySelectorAll('.admin-price-cell').forEach(function (btn) {
-            btn.addEventListener('click', function () { editBookingPrice(btn); });
-        });
-
-        tbody.querySelectorAll('.admin-icon-delete').forEach(function (btn) {
-            btn.addEventListener('click', function () { deleteBooking(btn.getAttribute('data-id')); });
+        // Tap/click anywhere on a row to see the full details.
+        tbody.querySelectorAll('.admin-booking-row-compact').forEach(function (row) {
+            row.addEventListener('click', function () { openBookingDetailModal(row.getAttribute('data-id')); });
         });
 
     }
@@ -2147,27 +2111,82 @@ document.addEventListener('DOMContentLoaded', function () {
         return allBookings.filter(function (b) { return b.id === id; })[0];
     }
 
-    function viewBooking(id) {
+    const adminBookingDetailModal = document.getElementById('adminBookingDetailModal');
+    const adminDetailCloseBtn = document.getElementById('adminDetailCloseBtn');
+    let currentDetailBookingId = null;
+
+    function closeBookingDetailModal() {
+        if (adminBookingDetailModal) {
+            adminBookingDetailModal.classList.remove('open');
+        }
+        currentDetailBookingId = null;
+    }
+
+    function renderDetailModalContent(id) {
 
         const b = findBooking(id);
-        if (!b) return;
+        if (!b) { closeBookingDetailModal(); return; }
 
-        alert(
-            'Booking ID: ' + b.id + '\n' +
-            'Date: ' + formatBookingDate(b.date) + '\n' +
-            'Time: ' + formatBookingTime(b.time) + '\n' +
-            'Name: ' + b.name + '\n' +
-            'Contact: ' + b.contact + '\n' +
-            'Service: ' + b.service + '\n' +
-            'Price: ' + (b.price != null ? '₱' + b.price : 'Not set') + '\n' +
-            'Status: ' + b.status + '\n' +
-            'Notes: ' + (b.notes || '(none)')
-        );
+        document.getElementById('detailBookingId').textContent = b.id;
+        document.getElementById('detailName').textContent = b.name;
+        document.getElementById('detailContact').textContent = b.contact;
+        document.getElementById('detailDate').textContent = formatBookingDate(b.date);
+        document.getElementById('detailTime').textContent = formatBookingTime(b.time);
+        document.getElementById('detailService').textContent = b.service;
+        document.getElementById('detailReferredBy').textContent = b.referredBy || '—';
+        document.getElementById('detailNotes').textContent = b.notes || '(none)';
+
+        const priceWrap = document.getElementById('detailPriceWrap');
+        priceWrap.innerHTML = '<button type="button" class="admin-price-cell" id="detailPriceBtn" data-id="' + b.id + '">' +
+            (b.price != null ? '₱' + b.price : 'Add price') + '</button>';
+        document.getElementById('detailPriceBtn').addEventListener('click', function (e) {
+            editBookingPrice(e.currentTarget, function () { renderDetailModalContent(id); });
+        });
+
+        const statusBtn = document.getElementById('detailStatusBtn');
+        statusBtn.textContent = b.status;
+        statusBtn.className = 'admin-status-badge admin-status-' + b.status;
+        statusBtn.onclick = function () {
+            toggleBookingDone(id, function () { renderDetailModalContent(id); });
+        };
 
     }
 
+    function openBookingDetailModal(id) {
+
+        currentDetailBookingId = id;
+        renderDetailModalContent(id);
+
+        if (adminBookingDetailModal) {
+            adminBookingDetailModal.classList.add('open');
+        }
+
+    }
+
+    if (adminDetailCloseBtn) adminDetailCloseBtn.addEventListener('click', closeBookingDetailModal);
+
+    if (adminBookingDetailModal) {
+        adminBookingDetailModal.addEventListener('click', function (e) {
+            if (e.target === adminBookingDetailModal) closeBookingDetailModal();
+        });
+    }
+
+    document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape' && adminBookingDetailModal && adminBookingDetailModal.classList.contains('open')) {
+            closeBookingDetailModal();
+        }
+    });
+
+    const detailDeleteBtn = document.getElementById('detailDeleteBtn');
+    if (detailDeleteBtn) {
+        detailDeleteBtn.addEventListener('click', function () {
+            if (!currentDetailBookingId) return;
+            deleteBooking(currentDetailBookingId, function () { closeBookingDetailModal(); });
+        });
+    }
+
     // One click flips Pending <-> Done -- no dropdowns, no extra steps.
-    function toggleBookingDone(id) {
+    function toggleBookingDone(id, onDone) {
 
         const b = findBooking(id);
         if (!b || !window.db) return;
@@ -2178,6 +2197,7 @@ document.addEventListener('DOMContentLoaded', function () {
             .then(function () {
                 b.status = nextStatus;
                 renderBookingTable();
+                if (onDone) onDone();
             })
             .catch(function () {
                 alert('Could not update this booking. Please try again.');
@@ -2192,7 +2212,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Turns the Price cell into an inline number input on click, and
     // saves to Firestore as soon as the admin clicks away or hits Enter.
-    function editBookingPrice(cellBtn) {
+    function editBookingPrice(cellBtn, onDone) {
 
         const id = cellBtn.getAttribute('data-id');
         const b = findBooking(id);
@@ -2209,24 +2229,29 @@ document.addEventListener('DOMContentLoaded', function () {
         input.focus();
         input.select();
 
+        function finish() {
+            renderBookingTable();
+            if (onDone) onDone();
+        }
+
         function commit() {
 
             const raw = input.value.trim();
             const newPrice = raw === '' ? null : Math.max(0, parseFloat(raw));
 
             if (newPrice === b.price) {
-                renderBookingTable();
+                finish();
                 return;
             }
 
             window.db.collection('bookings').doc(id).update({ price: newPrice })
                 .then(function () {
                     b.price = newPrice;
-                    renderBookingTable();
+                    finish();
                 })
                 .catch(function () {
                     alert('Could not save the price. Please try again.');
-                    renderBookingTable();
+                    finish();
                 });
 
         }
@@ -2235,13 +2260,13 @@ document.addEventListener('DOMContentLoaded', function () {
 
         input.addEventListener('keydown', function (e) {
             if (e.key === 'Enter') input.blur();
-            if (e.key === 'Escape') renderBookingTable();
+            if (e.key === 'Escape') finish();
         });
 
     }
 
 
-    function deleteBooking(id) {
+    function deleteBooking(id, onDeleted) {
 
         const b = findBooking(id);
         if (!b || !window.db) return;
@@ -2253,6 +2278,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
                 allBookings = allBookings.filter(function (x) { return x.id !== id; });
                 renderBookingTable();
+                if (onDeleted) onDeleted();
 
                 // Free up the slot on the public calendar too
                 return window.db.collection('bookedSlots')

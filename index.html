@@ -1151,6 +1151,65 @@
 
             </div>
 
+            <div class="modal-overlay admin-overlay" id="adminBookingDetailModal">
+
+                <div class="modal-box referral-check-box admin-detail-box">
+
+                    <button type="button" class="referral-close-btn" id="adminDetailCloseBtn" aria-label="Close">×</button>
+
+                    <h3>Booking Details</h3>
+
+                    <div class="admin-detail-grid">
+
+                        <div class="admin-detail-row">
+                            <span class="admin-detail-label">Booking ID</span>
+                            <span class="admin-detail-value" id="detailBookingId">—</span>
+                        </div>
+                        <div class="admin-detail-row">
+                            <span class="admin-detail-label">Name</span>
+                            <span class="admin-detail-value" id="detailName">—</span>
+                        </div>
+                        <div class="admin-detail-row">
+                            <span class="admin-detail-label">Contact</span>
+                            <span class="admin-detail-value" id="detailContact">—</span>
+                        </div>
+                        <div class="admin-detail-row">
+                            <span class="admin-detail-label">Date</span>
+                            <span class="admin-detail-value" id="detailDate">—</span>
+                        </div>
+                        <div class="admin-detail-row">
+                            <span class="admin-detail-label">Time</span>
+                            <span class="admin-detail-value" id="detailTime">—</span>
+                        </div>
+                        <div class="admin-detail-row">
+                            <span class="admin-detail-label">Service</span>
+                            <span class="admin-detail-value" id="detailService">—</span>
+                        </div>
+                        <div class="admin-detail-row">
+                            <span class="admin-detail-label">Price</span>
+                            <span class="admin-detail-value" id="detailPriceWrap"><button type="button" class="admin-price-cell" id="detailPriceBtn">—</button></span>
+                        </div>
+                        <div class="admin-detail-row">
+                            <span class="admin-detail-label">Referred By</span>
+                            <span class="admin-detail-value" id="detailReferredBy">—</span>
+                        </div>
+                        <div class="admin-detail-row admin-detail-row--notes">
+                            <span class="admin-detail-label">Notes</span>
+                            <span class="admin-detail-value" id="detailNotes">—</span>
+                        </div>
+                        <div class="admin-detail-row">
+                            <span class="admin-detail-label">Status</span>
+                            <span class="admin-detail-value"><button type="button" class="admin-status-badge" id="detailStatusBtn">—</button></span>
+                        </div>
+
+                    </div>
+
+                    <button type="button" class="admin-detail-delete-btn" id="detailDeleteBtn">🗑 Delete Booking</button>
+
+                </div>
+
+            </div>
+
             <div class="admin-qr-scanner-overlay" id="adminQrScannerOverlay" hidden>
 
                 <div class="admin-qr-scanner-box">

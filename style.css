@@ -4884,6 +4884,108 @@ h1, h2, h3, h4{
     background:#FBEFE3;
 }
 
+/* ---------- Simplified clickable booking row ---------- */
+
+.admin-booking-row-compact{
+    cursor:pointer;
+}
+
+.admin-booking-row-compact td{
+    font-size:13.5px;
+}
+
+.admin-row-name-cell{
+    display:flex;
+    align-items:center;
+    gap:8px;
+}
+
+.admin-row-status-dot{
+    flex-shrink:0;
+    width:8px;
+    height:8px;
+    border-radius:50%;
+}
+
+.admin-row-status-dot.admin-status-Pending{ background:#B8824F; }
+.admin-row-status-dot.admin-status-Done{ background:#3F7D4F; }
+
+.admin-row-chevron{
+    color:#C4A98C;
+    font-size:15px;
+}
+
+/* ---------- Booking Detail modal ---------- */
+
+.admin-detail-box{
+    max-width:420px;
+    width:calc(100% - 32px);
+    display:block;
+    grid-template-columns:none;
+    padding:36px 30px;
+    text-align:left;
+}
+
+.admin-detail-box h3{
+    font-family:'Playfair Display', serif;
+    font-size:19px;
+    color:#3A2624;
+    margin-bottom:18px;
+    text-align:center;
+}
+
+.admin-detail-grid{
+    display:flex;
+    flex-direction:column;
+}
+
+.admin-detail-row{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:14px;
+    padding:11px 0;
+    border-bottom:1px solid #F1E1D3;
+}
+
+.admin-detail-row--notes{
+    align-items:flex-start;
+}
+
+.admin-detail-label{
+    flex-shrink:0;
+    font-size:10.5px;
+    font-weight:700;
+    text-transform:uppercase;
+    letter-spacing:.4px;
+    color:#B8824F;
+}
+
+.admin-detail-value{
+    font-size:13.5px;
+    color:#3A2624;
+    text-align:right;
+    word-break:break-word;
+}
+
+.admin-detail-delete-btn{
+    width:100%;
+    height:48px;
+    margin-top:20px;
+    border-radius:12px;
+    background:none;
+    border:1.5px solid rgba(179,38,30,.35);
+    color:#B3261E;
+    font-weight:600;
+    font-size:13px;
+    cursor:pointer;
+    transition:background .18s ease;
+}
+
+.admin-detail-delete-btn:hover{
+    background:rgba(179,38,30,.06);
+}
+
 .admin-referral-count-badge{
 
     display:inline-block;
