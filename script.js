@@ -1181,10 +1181,11 @@ document.addEventListener('DOMContentLoaded', function () {
         const calBtn = document.getElementById('bookingSuccessCalendarBtn');
         if (calBtn) {
             if (selectedApptDate && selectedApptTime) {
+                const svc = SERVICES[pendingServiceIndex];
                 calBtn.href = googleCalendarLinkFor({
                     date: selectedApptDate,
                     time: selectedApptTime,
-                    service: selectedService ? selectedService.name : 'Appointment'
+                    service: svc ? svc.name : 'Appointment'
                 });
                 calBtn.hidden = false;
             } else {
