@@ -6,102 +6,346 @@
 <title>Privacy Policy | Nail X Taytay</title>
 <meta name="robots" content="noindex, follow">
 <link rel="icon" type="image/png" href="images/icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Work+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
 
 * { box-sizing: border-box; }
 
-body{
-    margin:0;
-    font-family:'Poppins', 'Work Sans', sans-serif;
-    background:#FFF8F2;
-    color:#3A2624;
-    line-height:1.7;
+:root{
+    --wine: #7A203A;
+    --wine-deep: #5E1626;
+    --gold: #D4A25A;
+    --ink: #2A1A1A;
+    --body-text: #4C3A34;
+    --muted: #8A6E60;
+    --cream: #FFF8F2;
+    --surface: #FFFBF6;
 }
 
+html{ scroll-behavior:smooth; }
+
+body{
+    margin:0;
+    font-family:'Work Sans', 'Poppins', sans-serif;
+    background:var(--cream);
+    color:var(--body-text);
+    line-height:1.7;
+    -webkit-font-smoothing:antialiased;
+}
+
+/* ---------- header ---------- */
 header{
     background:#FDF2EA;
-    padding:18px 24px;
+    padding:16px 28px;
     display:flex;
     align-items:center;
     gap:12px;
-    border-bottom:1px solid rgba(122,30,50,.08);
+    border-bottom:1px solid rgba(122,32,58,.08);
+    position:sticky;
+    top:0;
+    z-index:5;
 }
 
 header img{
-    width:38px;
-    height:38px;
+    width:40px;
+    height:40px;
     border-radius:50%;
     object-fit:cover;
-    border:1.5px solid #D4A25A;
+    border:1.5px solid var(--gold);
+    flex-shrink:0;
 }
 
 header h1{
     font-family:'Playfair Display', Georgia, serif;
-    font-size:16px;
+    font-weight:700;
+    font-size:17px;
     margin:0;
-    color:#7A203A;
+    color:var(--wine);
+    letter-spacing:.2px;
 }
 
-main{
-    max-width:720px;
+/* ---------- layout ---------- */
+.policy-wrap{
+    max-width:900px;
     margin:0 auto;
-    padding:40px 24px 80px;
+    padding:56px 28px 90px;
+    animation:fadeIn .5s ease both;
 }
 
-h2{
+@keyframes fadeIn{
+    from{ opacity:0; transform:translateY(8px); }
+    to{ opacity:1; transform:translateY(0); }
+}
+
+.policy-surface{
+    background:var(--surface);
+    border:1px solid rgba(212,162,90,.25);
+    border-radius:22px;
+    padding:52px 60px;
+    box-shadow:0 10px 40px rgba(122,32,58,.06);
+}
+
+/* ---------- back link ---------- */
+.back-link{
+    display:inline-flex;
+    align-items:center;
+    gap:7px;
+    margin-bottom:30px;
+    font-size:13.5px;
+    font-weight:600;
+    color:var(--wine);
+    text-decoration:none;
+    transition:color .22s ease;
+}
+
+.back-link .arrow{
+    display:inline-block;
+    transition:transform .22s ease;
+}
+
+.back-link:hover{
+    color:var(--wine-deep);
+}
+
+.back-link:hover .arrow{
+    transform:translateX(-3px);
+}
+
+.back-link:focus-visible{
+    outline:2px solid var(--gold);
+    outline-offset:4px;
+    border-radius:4px;
+}
+
+/* ---------- title ---------- */
+h2.page-title{
     font-family:'Playfair Display', Georgia, serif;
-    font-size:30px;
-    color:#2A1A1A;
-    margin-bottom:6px;
+    font-weight:700;
+    font-size:46px;
+    line-height:1.2;
+    color:var(--wine);
+    margin:0 0 14px;
+}
+
+.title-accent{
+    width:56px;
+    height:3px;
+    background:linear-gradient(90deg, var(--gold), rgba(212,162,90,.2));
+    border-radius:2px;
+    margin-bottom:18px;
 }
 
 .updated{
     font-size:13px;
-    color:#8A6E60;
-    margin-bottom:32px;
+    color:var(--muted);
+    margin:0 0 36px;
 }
 
+/* ---------- intro ---------- */
+.intro{
+    font-size:16px;
+    line-height:1.8;
+    color:var(--body-text);
+    max-width:66ch;
+    margin:0 0 44px;
+}
+
+/* ---------- section headings ---------- */
 h3{
     font-family:'Playfair Display', Georgia, serif;
-    font-size:19px;
-    color:#7A203A;
-    margin-top:32px;
-    margin-bottom:10px;
+    font-weight:700;
+    font-size:25px;
+    color:var(--wine);
+    margin:44px 0 16px;
+    scroll-margin-top:90px;
 }
 
-p, li{
-    font-size:14.5px;
-    color:#4C3A34;
+section:first-of-type h3{
+    margin-top:0;
 }
 
+/* ---------- body text ---------- */
+p{
+    font-size:15.5px;
+    line-height:1.8;
+    color:var(--body-text);
+    margin:0 0 14px;
+}
+
+/* ---------- lists ---------- */
 ul{
-    padding-left:20px;
+    list-style:none;
+    padding-left:4px;
+    margin:0 0 8px;
 }
 
 li{
-    margin-bottom:6px;
+    position:relative;
+    padding-left:22px;
+    margin-bottom:14px;
+    font-size:15.5px;
+    line-height:1.75;
+    color:var(--body-text);
 }
 
-a{
-    color:#7A203A;
+li::before{
+    content:'';
+    position:absolute;
+    left:2px;
+    top:9px;
+    width:6px;
+    height:6px;
+    border-radius:50%;
+    background:var(--gold);
+}
+
+li strong{
+    color:var(--ink);
     font-weight:600;
 }
 
-.back-link{
-    display:inline-flex;
-    align-items:center;
-    gap:6px;
-    margin-bottom:24px;
-    font-size:13.5px;
-    text-decoration:none;
+a{
+    color:var(--wine);
+    font-weight:600;
+    text-decoration:underline;
+    text-underline-offset:2px;
 }
 
-.contact-box{
-    margin-top:32px;
-    background:#FFFBF6;
-    border:1px solid rgba(212,162,90,.35);
+a:hover{
+    color:var(--wine-deep);
+}
+
+/* ---------- section divider ---------- */
+.section-divider{
+    border:none;
+    border-top:1px solid rgba(212,162,90,.25);
+    margin:40px 0 0;
+}
+
+/* ---------- trust note ---------- */
+.trust-note{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    margin:48px 0 8px;
+    padding:16px 20px;
+    background:rgba(212,162,90,.08);
+    border:1px solid rgba(212,162,90,.3);
     border-radius:14px;
-    padding:18px 20px;
+}
+
+.trust-note svg{
+    flex-shrink:0;
+    color:var(--wine);
+}
+
+.trust-note span{
+    font-size:14px;
+    font-weight:600;
+    color:var(--ink);
+}
+
+/* ---------- contact box ---------- */
+.contact-box{
+    margin-top:24px;
+    background:#fff;
+    border:1px solid rgba(212,162,90,.35);
+    border-radius:16px;
+    padding:22px 24px;
+}
+
+.contact-box strong{
+    display:block;
+    font-size:15px;
+    color:var(--ink);
+    margin-bottom:6px;
+}
+
+.contact-box p{
+    margin-bottom:0;
+    font-size:14.5px;
+}
+
+/* ---------- footer ---------- */
+footer{
+    text-align:center;
+    padding:32px 24px 48px;
+    font-size:12.5px;
+    color:var(--muted);
+}
+
+footer a{
+    color:var(--muted);
+    text-decoration:none;
+    font-weight:500;
+}
+
+footer a:hover{
+    color:var(--wine);
+}
+
+footer .footer-links{
+    margin-bottom:8px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:10px;
+    flex-wrap:wrap;
+}
+
+/* ---------- responsive ---------- */
+@media (max-width:768px){
+
+    .policy-surface{
+        padding:36px 32px;
+        border-radius:18px;
+    }
+
+    h2.page-title{
+        font-size:34px;
+    }
+
+}
+
+@media (max-width:480px){
+
+    header{
+        padding:14px 20px;
+    }
+
+    .policy-wrap{
+        padding:36px 20px 70px;
+    }
+
+    .policy-surface{
+        padding:28px 22px;
+        border-radius:16px;
+    }
+
+    h2.page-title{
+        font-size:32px;
+    }
+
+    h3{
+        font-size:21px;
+        margin-top:36px;
+    }
+
+    .intro{
+        font-size:15px;
+    }
+
+    p, li{
+        font-size:15px;
+    }
+
+}
+
+@media (prefers-reduced-motion: reduce){
+    html{ scroll-behavior:auto; }
+    .policy-wrap{ animation:none; }
+    .back-link, .back-link .arrow{ transition:none; }
 }
 
 </style>
@@ -113,68 +357,101 @@ a{
     <h1>Nail X Taytay</h1>
 </header>
 
-<main>
+<div class="policy-wrap">
 
-    <a class="back-link" href="index.html">← Back to home</a>
+    <a class="back-link" href="index.html"><span class="arrow">←</span> Back to home</a>
 
-    <h2>Privacy Policy</h2>
-    <p class="updated">Last updated: September 2026</p>
+    <div class="policy-surface">
 
-    <p>Nail X Taytay ("we", "us", or "our") respects your privacy. This page explains what
-    information we collect when you use this website to book an appointment, check your
-    referral rewards, or manage your booking, and how we use it.</p>
+        <h2 class="page-title">Privacy Policy</h2>
+        <div class="title-accent"></div>
+        <p class="updated">Last updated: September 2026</p>
 
-    <h3>What we collect</h3>
-    <ul>
-        <li><strong>Booking details</strong> — your name, mobile number, chosen service, date and
-        time, and any notes or inspiration photos you choose to share.</li>
-        <li><strong>Referral information</strong> — if you were referred by a friend, we record
-        their mobile number to track referral rewards.</li>
-        <li><strong>Push notification subscription</strong> — only if you tap "Enable Appointment
-        Reminder", your browser creates a subscription (no personal content, just a way to
-        deliver a reminder notification to that device) which we store against your booking.</li>
-    </ul>
+        <p class="intro">Nail X Taytay ("we", "us", or "our") respects your privacy. This page explains what
+        information we collect when you use this website to book an appointment, check your
+        referral rewards, or manage your booking, and how we use it.</p>
 
-    <h3>How we use it</h3>
-    <ul>
-        <li>To confirm and manage your appointment.</li>
-        <li>To send you an appointment reminder notification, only if you opted in.</li>
-        <li>To track and honor referral rewards.</li>
-        <li>To improve our services based on booking patterns (e.g. popular time slots).</li>
-    </ul>
+        <section>
+        <h3>What we collect</h3>
+        <ul>
+            <li><strong>Booking details</strong> — your name, mobile number, chosen service, date and
+            time, and any notes or inspiration photos you choose to share.</li>
+            <li><strong>Referral information</strong> — if you were referred by a friend, we record
+            their mobile number to track referral rewards.</li>
+            <li><strong>Push notification subscription</strong> — only if you tap "Enable Appointment
+            Reminder", your browser creates a subscription (no personal content, just a way to
+            deliver a reminder notification to that device) which we store against your booking.</li>
+        </ul>
+        </section>
 
-    <h3>What we don't do</h3>
-    <ul>
-        <li>We do not sell or rent your personal information to third parties.</li>
-        <li>We do not use your information for advertising.</li>
-        <li>We do not share your booking details publicly — the public calendar only shows
-        which time slots are taken, never your name or contact details.</li>
-    </ul>
+        <section>
+        <h3>How we use it</h3>
+        <ul>
+            <li>To confirm and manage your appointment.</li>
+            <li>To send you an appointment reminder notification, only if you opted in.</li>
+            <li>To track and honor referral rewards.</li>
+            <li>To improve our services based on booking patterns (e.g. popular time slots).</li>
+        </ul>
+        </section>
 
-    <h3>Where your information is stored</h3>
-    <p>Your information is stored securely using Google Firebase (Firestore), a
-    industry-standard cloud database. Access to the full list of bookings is restricted to
-    the site administrator.</p>
+        <section>
+        <h3>What we don't do</h3>
+        <ul>
+            <li>We do not sell or rent your personal information to third parties.</li>
+            <li>We do not use your information for advertising.</li>
+            <li>We do not share your booking details publicly — the public calendar only shows
+            which time slots are taken, never your name or contact details.</li>
+        </ul>
+        </section>
 
-    <h3>Your choices</h3>
-    <ul>
-        <li>You can cancel or request a reschedule for your own booking anytime using the
-        "Manage Booking" page.</li>
-        <li>You can turn off appointment reminder notifications anytime in your browser's
-        site settings.</li>
-        <li>You can ask us to delete your booking information by messaging us directly.</li>
-    </ul>
+        <section>
+        <h3>Where your information is stored</h3>
+        <p>Your information is stored securely using Google Firebase (Firestore), a
+        industry-standard cloud database. Access to the full list of bookings is restricted to
+        the site administrator.</p>
+        </section>
 
-    <h3>Cookies and local storage</h3>
-    <p>This site does not use tracking or advertising cookies. It may use your browser's local
-    storage only to remember your own preferences (like whether you've dismissed a prompt).</p>
+        <section>
+        <h3>Your choices</h3>
+        <ul>
+            <li>You can cancel or request a reschedule for your own booking anytime using the
+            "Manage Booking" page.</li>
+            <li>You can turn off appointment reminder notifications anytime in your browser's
+            site settings.</li>
+            <li>You can ask us to delete your booking information by messaging us directly.</li>
+        </ul>
+        </section>
 
-    <div class="contact-box">
-        <strong>Questions about your data?</strong>
-        <p style="margin-bottom:0;">Message us directly through Messenger and we'll be happy to help.</p>
+        <section>
+        <h3>Cookies and local storage</h3>
+        <p>This site does not use tracking or advertising cookies. It may use your browser's local
+        storage only to remember your own preferences (like whether you've dismissed a prompt).</p>
+        </section>
+
+        <hr class="section-divider">
+
+        <div class="trust-note">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none"><path d="M12 3l7 3v6c0 4.5-3 8-7 9-4-1-7-4.5-7-9V6l7-3z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M9 12l2 2 4-4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <span>Your privacy matters to us.</span>
+        </div>
+
+        <div class="contact-box">
+            <strong>Questions about your data?</strong>
+            <p>Message us directly through Messenger and we'll be happy to help.</p>
+        </div>
+
     </div>
 
-</main>
+</div>
+
+<footer>
+    <div class="footer-links">
+        <a href="index.html">Home</a>
+        <span>·</span>
+        <a href="privacy.html">Privacy Policy</a>
+    </div>
+    <p style="margin:0;">&copy; 2026 Nail X Taytay. All rights reserved.</p>
+</footer>
 
 </body>
 </html>

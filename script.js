@@ -1,4 +1,18 @@
 // ===============================
+// APP SPLASH SCREEN CLEANUP -- only relevant when running as an
+// installed PWA (the splash is CSS-hidden entirely otherwise). Removes
+// it from the DOM once its fade-out finishes, so it can't linger and
+// block anything for accessibility tools.
+// ===============================
+(function () {
+    const splash = document.getElementById('appSplash');
+    if (!splash) return;
+    splash.addEventListener('animationend', function () {
+        splash.remove();
+    });
+})();
+
+// ===============================
 // BOOKING MODAL
 // ===============================
 
