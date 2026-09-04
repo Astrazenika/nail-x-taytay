@@ -1,0 +1,36 @@
+name: Send Appointment Reminders
+
+on:
+  schedule:
+    # Runs every 10 minutes, all day, every day. GitHub Actions cron
+    # timing can occasionally lag by a few minutes during busy periods,
+    # but that's fine here since the reminder script uses a wide-enough
+    # window and never sends the same reminder twice.
+    - cron: '*/10 * * * *'
+  # Lets you trigger a run manually from the Actions tab, handy for
+  # testing without waiting for the schedule.
+  workflow_dispatch:
+
+jobs:
+  send-reminders:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        working-directory: ./reminder-worker
+        run: npm install
+
+      - name: Run reminder check
+        working-directory: ./reminder-worker
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          VAPID_PUBLIC_KEY: ${{ secrets.VAPID_PUBLIC_KEY }}
+          VAPID_PRIVATE_KEY: ${{ secrets.VAPID_PRIVATE_KEY }}
+        run: node send-reminders.js
