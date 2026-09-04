@@ -2281,6 +2281,103 @@ img{
 
 .referral-result{ text-align:center; animation:popup .25s ease; }
 
+.manage-booking-list{
+    display:flex;
+    flex-direction:column;
+    gap:16px;
+    margin-bottom:20px;
+    text-align:left;
+}
+
+.manage-booking-card{
+    background:#FFFBF6;
+    border:1px solid rgba(212,162,90,.35);
+    border-radius:16px;
+    padding:18px 20px;
+    box-shadow:0 4px 14px rgba(122,32,58,.06);
+}
+
+.manage-booking-card-status{
+    display:inline-block;
+    font-size:10px;
+    font-weight:700;
+    letter-spacing:.4px;
+    text-transform:uppercase;
+    padding:3px 10px;
+    border-radius:20px;
+    margin-bottom:10px;
+    background:rgba(184,130,79,.15);
+    color:#8A5A1E;
+}
+
+.manage-booking-card-service{
+    font-family:'Playfair Display', serif;
+    font-size:17px;
+    font-weight:700;
+    color:#2A1A1A;
+    margin-bottom:6px;
+}
+
+.manage-booking-card-datetime{
+    font-size:13.5px;
+    color:#5C4038;
+    margin-bottom:14px;
+}
+
+.manage-booking-card-actions{
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+}
+
+.manage-booking-action-btn{
+    width:100%;
+    padding:11px;
+    border-radius:12px;
+    font-size:12.5px;
+    font-weight:600;
+    cursor:pointer;
+    text-align:center;
+    text-decoration:none;
+    display:block;
+    border:1.5px solid transparent;
+    transition:transform .18s ease, box-shadow .18s ease;
+}
+
+.manage-booking-action-btn:hover{
+    transform:translateY(-1px);
+}
+
+.manage-booking-action-calendar{
+    background:#fff;
+    border-color:#D4A25A;
+    color:#8A5A1E;
+}
+
+.manage-booking-action-reschedule{
+    background:#fff;
+    border-color:#7A203A;
+    color:#7A203A;
+}
+
+.manage-booking-action-cancel{
+    background:none;
+    border-color:rgba(179,38,30,.35);
+    color:#B3261E;
+}
+
+.manage-booking-action-cancel:hover{
+    background:rgba(179,38,30,.06);
+}
+
+.manage-booking-cancelled-note{
+    font-size:12.5px;
+    color:#B3261E;
+    font-style:italic;
+    text-align:center;
+    padding:8px 0 2px;
+}
+
 .referral-result-icon{
 
     font-size:36px;
@@ -5047,6 +5144,7 @@ h1, h2, h3, h4{
 
 .admin-row-status-dot.admin-status-Pending{ background:#B8824F; }
 .admin-row-status-dot.admin-status-Done{ background:#3F7D4F; }
+.admin-row-status-dot.admin-status-Cancelled{ background:#B3261E; }
 
 .admin-row-chevron{
     color:#C4A98C;
@@ -6054,6 +6152,7 @@ h1, h2, h3, h4{
 
 .admin-status-Pending{ background:#FEF3C7; color:#B7791F; }
 .admin-status-Done{ background:#DCFCE7; color:#2F855A; }
+.admin-status-Cancelled{ background:#FBE4E2; color:#B3261E; }
 
 /* editable price cell */
 .admin-price-cell{

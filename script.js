@@ -482,6 +482,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
             snapshot.forEach(function (doc) {
                 const d = doc.data();
+                if (d.status === 'Cancelled') return; // freed up -- don't block rebooking
                 if (d.date && d.time) bookedSlots.push(d.date + '|' + d.time);
                 if (d.date && d.status === 'Done') doneDates[d.date] = true;
             });
@@ -1466,7 +1467,222 @@ document.addEventListener('DOMContentLoaded', function () {
 
     }
 
-    // Redemption flow: staff scans a customer's reward QR code, which opens
+    // ===============================
+    // MANAGE MY BOOKING -- customer looks up their own upcoming
+    // appointment(s) by phone number and can add it to their calendar,
+    // request a reschedule via Messenger, or cancel outright.
+    // ===============================
+
+    const manageBookingModal = document.getElementById('manageBookingModal');
+    const manageBookingModalClose = document.getElementById('manageBookingModalClose');
+    const manageBookingNavLink = document.getElementById('manageBookingNavLink');
+    const manageBookingForm = document.getElementById('manageBookingForm');
+    const manageBookingResult = document.getElementById('manageBookingResult');
+    const manageBookingNotFound = document.getElementById('manageBookingNotFound');
+    const manageBookingSubmitBtn = document.getElementById('manageBookingSubmitBtn');
+    const manageBookingBackBtn = document.getElementById('manageBookingBackBtn');
+    const manageBookingNotFoundBackBtn = document.getElementById('manageBookingNotFoundBackBtn');
+    const manageBookingPhoneInput = document.getElementById('manageBookingPhoneInput');
+
+    function showManageBookingStep(step) {
+        if (manageBookingForm) manageBookingForm.hidden = step !== 'form';
+        if (manageBookingResult) manageBookingResult.hidden = step !== 'result';
+        if (manageBookingNotFound) manageBookingNotFound.hidden = step !== 'notfound';
+    }
+
+    function openManageBookingModal() {
+
+        showManageBookingStep('form');
+        const errEl = document.getElementById('manageBookingError');
+        if (errEl) errEl.textContent = '';
+        if (manageBookingPhoneInput) manageBookingPhoneInput.value = '';
+
+        if (manageBookingModal) {
+            manageBookingModal.classList.add('open');
+            document.body.style.overflow = 'hidden';
+        }
+
+    }
+
+    function closeManageBookingModal() {
+        if (manageBookingModal) {
+            manageBookingModal.classList.remove('open');
+            document.body.style.overflow = '';
+        }
+    }
+
+    if (manageBookingNavLink) {
+        manageBookingNavLink.addEventListener('click', function (e) {
+            e.preventDefault();
+            openManageBookingModal();
+        });
+    }
+
+    if (manageBookingModalClose) manageBookingModalClose.addEventListener('click', closeManageBookingModal);
+
+    if (manageBookingModal) {
+        manageBookingModal.addEventListener('click', function (e) {
+            if (e.target === manageBookingModal) closeManageBookingModal();
+        });
+    }
+
+    document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape' && manageBookingModal && manageBookingModal.classList.contains('open')) {
+            closeManageBookingModal();
+        }
+    });
+
+    if (manageBookingBackBtn) manageBookingBackBtn.addEventListener('click', function () { showManageBookingStep('form'); });
+    if (manageBookingNotFoundBackBtn) manageBookingNotFoundBackBtn.addEventListener('click', function () { showManageBookingStep('form'); });
+
+    if (manageBookingPhoneInput) {
+        manageBookingPhoneInput.addEventListener('input', function () {
+            manageBookingPhoneInput.value = manageBookingPhoneInput.value.replace(/\D/g, '').slice(0, 11);
+        });
+    }
+
+    // Builds a Google Calendar "quick add" link -- no API key needed,
+    // just a URL with the event details pre-filled.
+    function googleCalendarLinkFor(b) {
+
+        const start = b.date.replace(/-/g, '') + 'T' + b.time.replace(':', '') + '00';
+        const startDt = new Date(b.date + 'T' + b.time + ':00');
+        const endDt = new Date(startDt.getTime() + 60 * 60000); // default 1hr block
+        const end = b.date.replace(/-/g, '') + 'T' +
+            String(endDt.getHours()).padStart(2, '0') + String(endDt.getMinutes()).padStart(2, '0') + '00';
+
+        const params = new URLSearchParams({
+            action: 'TEMPLATE',
+            text: 'Nail X Taytay Appointment — ' + b.service,
+            dates: start + '/' + end,
+            details: 'Appointment at Nail X Taytay. Service: ' + b.service,
+            location: 'Poland, Santa Ana, Taytay, 1920 Rizal'
+        });
+
+        return 'https://calendar.google.com/calendar/render?' + params.toString();
+
+    }
+
+    function renderManageBookingCard(b) {
+
+        const card = document.createElement('div');
+        card.className = 'manage-booking-card';
+
+        card.innerHTML =
+            '<span class="manage-booking-card-status">' + b.status + '</span>' +
+            '<p class="manage-booking-card-service">' + b.service + '</p>' +
+            '<p class="manage-booking-card-datetime">📅 ' + formatBookingDate(b.date) + ' · ⏰ ' + formatBookingTime(b.time) + '</p>' +
+            '<div class="manage-booking-card-actions">' +
+            '<a class="manage-booking-action-btn manage-booking-action-calendar" href="' + googleCalendarLinkFor(b) + '" target="_blank" rel="noopener">📅 Add to Google Calendar</a>' +
+            '<button type="button" class="manage-booking-action-btn manage-booking-action-reschedule" data-action="reschedule">🔄 Request Reschedule</button>' +
+            '<button type="button" class="manage-booking-action-btn manage-booking-action-cancel" data-action="cancel">❌ Cancel Booking</button>' +
+            '</div>';
+
+        card.querySelector('[data-action="reschedule"]').addEventListener('click', function () {
+
+            const msg = "Hi! I'd like to request a reschedule for my " + b.service +
+                ' appointment on ' + formatBookingDate(b.date) + ' at ' + formatBookingTime(b.time) +
+                ' (Booking ID: ' + b.id + '). ';
+
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(msg).catch(function () {});
+            }
+
+            window.open('https://m.me/' + MESSENGER_PAGE_USERNAME, '_blank');
+
+        });
+
+        card.querySelector('[data-action="cancel"]').addEventListener('click', function () {
+
+            if (!confirm('Cancel your ' + b.service + ' appointment on ' + formatBookingDate(b.date) + ' at ' + formatBookingTime(b.time) + '? This cannot be undone.')) return;
+
+            if (!window.db) return;
+
+            const cancelBtn = card.querySelector('[data-action="cancel"]');
+            cancelBtn.textContent = 'Cancelling…';
+            cancelBtn.disabled = true;
+
+            window.db.collection('bookings').doc(b.id).update({ status: 'Cancelled' })
+                .then(function () {
+
+                    // Free up the slot on the public calendar too.
+                    return window.db.collection('bookedSlots').doc(b.date + '_' + b.time).update({ status: 'Cancelled' }).catch(function () {});
+
+                })
+                .then(function () {
+                    card.querySelector('.manage-booking-card-status').textContent = 'Cancelled';
+                    card.querySelector('.manage-booking-card-actions').innerHTML = '<p class="manage-booking-cancelled-note">This booking has been cancelled.</p>';
+                    loadAvailability();
+                })
+                .catch(function () {
+                    alert('Could not cancel this booking. Please try again or message us directly.');
+                    cancelBtn.textContent = '❌ Cancel Booking';
+                    cancelBtn.disabled = false;
+                });
+
+        });
+
+        return card;
+
+    }
+
+    if (manageBookingSubmitBtn) {
+
+        manageBookingSubmitBtn.addEventListener('click', function () {
+
+            const phone = manageBookingPhoneInput.value.trim();
+            const errEl = document.getElementById('manageBookingError');
+            if (errEl) errEl.textContent = '';
+
+            if (!phone) {
+                if (errEl) errEl.textContent = 'Please enter your mobile number.';
+                return;
+            }
+
+            if (!/^09\d{9}$/.test(phone)) {
+                if (errEl) errEl.textContent = 'Please enter a valid Philippine mobile number.';
+                return;
+            }
+
+            if (!window.db) {
+                if (errEl) errEl.textContent = 'Could not connect right now — please try again shortly.';
+                return;
+            }
+
+            manageBookingSubmitBtn.disabled = true;
+            manageBookingSubmitBtn.textContent = 'Searching…';
+
+            window.db.collection('bookings').where('contact', '==', phone).where('status', '==', 'Pending').get()
+                .then(function (snapshot) {
+
+                    manageBookingSubmitBtn.disabled = false;
+                    manageBookingSubmitBtn.textContent = 'Find My Booking';
+
+                    if (snapshot.empty) {
+                        showManageBookingStep('notfound');
+                        return;
+                    }
+
+                    const bookings = [];
+                    snapshot.forEach(function (doc) { bookings.push(Object.assign({ id: doc.id }, doc.data())); });
+                    bookings.sort(function (a, b) { return (a.date + a.time) < (b.date + b.time) ? -1 : 1; });
+
+                    const list = document.getElementById('manageBookingList');
+                    list.innerHTML = '';
+                    bookings.forEach(function (b) { list.appendChild(renderManageBookingCard(b)); });
+
+                    showManageBookingStep('result');
+
+                })
+                .catch(function () {
+                    manageBookingSubmitBtn.disabled = false;
+                    manageBookingSubmitBtn.textContent = 'Find My Booking';
+                    if (errEl) errEl.textContent = 'Something went wrong. Please try again.';
+                });
+
+        });
+
+    }
     // this site with ?redeem=<phone> -- automatically show that number's
     // referral status so staff can verify the 50% OFF reward on the spot.
     (function autoRedeemFromQr() {
@@ -2301,12 +2517,13 @@ document.addEventListener('DOMContentLoaded', function () {
 
         return allBookings.filter(function (b) {
 
-            // Table View = active bookings only; Archive = completed ones.
-            // This keeps the working list short once a booking is Done.
+            // Table View = active (Pending) bookings only; Archive = anything
+            // no longer active (Done or Cancelled). Keeps the working list
+            // short once a booking is finished or cancelled.
             if (adminArchiveMode) {
-                if (b.status !== 'Done') return false;
+                if (b.status !== 'Done' && b.status !== 'Cancelled') return false;
             } else {
-                if (b.status === 'Done') return false;
+                if (b.status === 'Done' || b.status === 'Cancelled') return false;
             }
 
             if (statusFilter && b.status !== statusFilter) return false;
