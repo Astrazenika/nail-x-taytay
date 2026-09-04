@@ -3310,8 +3310,18 @@ document.addEventListener('DOMContentLoaded', function () {
     const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
     const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
 
-    // Already installed and running as an app -- nothing to offer.
-    if (isStandalone) return;
+    function hideFloatingInstallButton() {
+        const btn = document.getElementById('floatingBookBtn');
+        if (btn) btn.hidden = true;
+    }
+
+    // Already installed and running as an app -- nothing to offer, and
+    // the floating button (which is otherwise always visible) should
+    // disappear since there's nothing left for it to do.
+    if (isStandalone) {
+        hideFloatingInstallButton();
+        return;
+    }
 
     // Android/Chrome: browser tells us installation is genuinely available
     // right now -- capture it so the floating button can use it directly
@@ -3323,6 +3333,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     window.addEventListener('appinstalled', function () {
         deferredInstallPrompt = null;
+        hideFloatingInstallButton();
     });
 
     // Floating circle button: kept more permissive on purpose (per an

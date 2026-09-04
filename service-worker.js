@@ -52,9 +52,10 @@ self.addEventListener('fetch', function (event) {
 });
 
 // ---- Appointment reminder push notifications ----
-// The actual reminder is triggered by a scheduled Cloud Function (see
-// /functions), which sends a push message at the right time even if
-// this site isn't open. This just displays it when it arrives.
+// The actual reminder is triggered by a scheduled GitHub Actions workflow
+// (see /reminder-worker and /.github/workflows), which sends a push
+// message at the right time even if this site isn't open. This just
+// displays it when it arrives.
 
 self.addEventListener('push', function (event) {
 
@@ -69,7 +70,14 @@ self.addEventListener('push', function (event) {
       body: data.body,
       icon: './images/icon-192.png',
       badge: './images/icon-192.png',
-      tag: 'nailxtaytay-reminder'
+      tag: 'nailxtaytay-reminder',
+      // Makes sure the device actually gets people's attention --
+      // plays the device's default notification sound and vibrates
+      // in a short-short-long pattern (Android; iOS/desktop ignore
+      // "vibrate" gracefully where it isn't supported).
+      silent: false,
+      vibrate: [200, 100, 200, 100, 400],
+      requireInteraction: true
     })
   );
 
