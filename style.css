@@ -3632,6 +3632,36 @@ img{
 
 }
 
+.gallery-filter-bar{
+    display:flex;
+    flex-wrap:wrap;
+    justify-content:center;
+    gap:8px;
+    margin-bottom:24px;
+}
+
+.gallery-filter-pill{
+    padding:8px 16px;
+    border-radius:20px;
+    border:1.5px solid rgba(122,32,58,.25);
+    background:#fff;
+    color:#7A203A;
+    font-size:12.5px;
+    font-weight:600;
+    cursor:pointer;
+    transition:.2s ease;
+}
+
+.gallery-filter-pill:hover{
+    border-color:#7A203A;
+}
+
+.gallery-filter-pill.is-active{
+    background:linear-gradient(135deg, #8A2745, #6E1B30);
+    border-color:#6E1B30;
+    color:#fff;
+}
+
 .gallery-modal-grid{
 
     display:grid;
@@ -4726,6 +4756,78 @@ h1, h2, h3, h4{
     color:#8A6E60;
     max-width:320px;
     line-height:1.5;
+}
+
+.waitlist-box{
+    margin-top:20px;
+    padding:20px 22px;
+    background:linear-gradient(165deg, #FFFBF6, #FBEFE3);
+    border:1px solid rgba(212,175,55,.4);
+    border-radius:16px;
+}
+
+.waitlist-title{
+    font-family:'Playfair Display', serif;
+    font-weight:700;
+    font-size:16px;
+    color:#2A1A1A;
+    margin-bottom:6px;
+}
+
+.waitlist-sub{
+    font-size:13px;
+    color:#7B6F67;
+    margin-bottom:16px;
+    line-height:1.5;
+}
+
+.waitlist-input{
+    width:100%;
+    padding:12px 14px;
+    border:1.5px solid rgba(122,32,58,.2);
+    border-radius:12px;
+    font-size:13.5px;
+    font-family:'Poppins', sans-serif;
+    margin-bottom:10px;
+    background:#fff;
+}
+
+.waitlist-input:focus{
+    outline:none;
+    border-color:#7A203A;
+}
+
+.waitlist-btn{
+    width:100%;
+    padding:13px;
+    border:none;
+    border-radius:12px;
+    background:linear-gradient(135deg, #8A2745, #6E1B30);
+    color:#fff;
+    font-weight:600;
+    font-size:13.5px;
+    cursor:pointer;
+    margin-top:4px;
+    box-shadow:0 6px 16px rgba(122,32,58,.25);
+    transition:transform .2s ease;
+}
+
+.waitlist-btn:hover{
+    transform:translateY(-1px);
+}
+
+.waitlist-btn:disabled{
+    opacity:.7;
+    cursor:default;
+    transform:none;
+}
+
+.waitlist-success{
+    text-align:center;
+    color:#3F7D4F;
+    font-weight:600;
+    font-size:13.5px;
+    padding:6px 0 2px;
 }
 
 /* ---------- appointment summary card ---------- */
@@ -6071,6 +6173,97 @@ h1, h2, h3, h4{
     overflow:auto;
 }
 
+.admin-bulk-bar{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    background:#FBF3E8;
+    border:1.5px solid #D4A25A;
+    border-radius:12px;
+    padding:12px 16px;
+    margin-bottom:14px;
+    flex-wrap:wrap;
+}
+
+.admin-bulk-bar[hidden]{
+    display:none !important;
+}
+
+.admin-bulk-count{
+    font-size:12.5px;
+    font-weight:700;
+    color:#7A203A;
+    margin-right:auto;
+}
+
+.admin-bulk-btn{
+    padding:8px 16px;
+    border-radius:10px;
+    border:none;
+    font-size:12px;
+    font-weight:600;
+    cursor:pointer;
+    transition:transform .18s ease;
+}
+
+.admin-bulk-btn:hover{
+    transform:translateY(-1px);
+}
+
+.admin-bulk-btn:disabled{
+    opacity:.7;
+    cursor:default;
+    transform:none;
+}
+
+.admin-bulk-done{
+    background:#3F7D4F;
+    color:#fff;
+}
+
+.admin-bulk-delete{
+    background:#B3261E;
+    color:#fff;
+}
+
+.admin-bulk-clear{
+    background:none;
+    border:1px solid rgba(122,32,58,.25);
+    color:#7A203A;
+    padding:7px 14px;
+    border-radius:10px;
+    font-size:12px;
+    font-weight:600;
+    cursor:pointer;
+}
+
+.admin-th-check,
+.admin-td-check{
+    width:36px;
+}
+
+.admin-row-check{
+    width:17px;
+    height:17px;
+    cursor:pointer;
+    accent-color:#7A203A;
+}
+
+@media(max-width:640px){
+
+    .admin-td-check{
+        display:flex;
+        align-items:center;
+        border-bottom:1px solid #F5EBE1;
+    }
+
+    .admin-td-check::before{
+        content:'Select';
+        margin-right:8px;
+    }
+
+}
+
 .admin-booking-table{
     width:100%;
     border-collapse:separate;
@@ -6629,6 +6822,40 @@ h1, h2, h3, h4{
     color:#7B6F67;
     font-style:italic;
     padding:10px 0;
+}
+
+.admin-cal-waitlist-heading{
+    font-family:'Playfair Display', serif;
+    font-weight:700;
+    font-size:14px;
+    color:#7A203A;
+    margin:20px 0 10px;
+    padding-top:16px;
+    border-top:1px dashed rgba(212,162,90,.4);
+}
+
+.admin-cal-waitlist-item{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:9px 12px;
+    background:#FFFBF6;
+    border:1px solid rgba(212,162,90,.3);
+    border-radius:10px;
+    margin-bottom:8px;
+    font-family:'Poppins', sans-serif;
+    font-size:12.5px;
+}
+
+.admin-cal-waitlist-item span{
+    color:#2A1A1A;
+    font-weight:600;
+}
+
+.admin-cal-waitlist-item a{
+    color:#7A203A;
+    text-decoration:none;
+    font-weight:600;
 }
 
 @media(max-width:768px){

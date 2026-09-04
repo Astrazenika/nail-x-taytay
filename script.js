@@ -236,6 +236,21 @@ document.addEventListener('DOMContentLoaded', function () {
         GALLERY_IMAGES.push('images/gallery/' + i + '.jpg');
     }
 
+    // --- Gallery filter tags -------------------------------------------
+    // Optional: tag each photo with a category so the "Full Gallery" view
+    // can be filtered by service/design type. Add a line here for any
+    // photo you want tagged, e.g.:
+    //   'images/gallery/3.jpg': 'Nail Extensions',
+    // Untagged photos still show up under "All", just not under a
+    // specific filter. Reusing the site's own service names keeps the
+    // filter list short and familiar.
+    const GALLERY_CATEGORIES = {
+        // 'images/gallery/1.jpg': 'Gel Manicure',
+        // 'images/gallery/2.jpg': 'Nail Extensions',
+    };
+
+    let galleryActiveFilter = 'All';
+
     function shuffleCopy(arr) {
 
         const copy = arr.slice();
@@ -383,11 +398,51 @@ document.addEventListener('DOMContentLoaded', function () {
 
     if (viewFullGalleryBtn && galleryModal && galleryModalGrid) {
 
-        function openGalleryModal() {
+        function renderGalleryFilterBar() {
+
+            const bar = document.getElementById('galleryFilterBar');
+            if (!bar) return;
+
+            const usedCategories = SERVICES
+                .map(function (s) { return s.name; })
+                .filter(function (name) {
+                    return Object.values(GALLERY_CATEGORIES).indexOf(name) !== -1;
+                });
+
+            // Only show the filter bar at all once at least one photo has
+            // actually been tagged -- no point showing empty filters.
+            if (!usedCategories.length) {
+                bar.innerHTML = '';
+                bar.hidden = true;
+                return;
+            }
+
+            bar.hidden = false;
+            const options = ['All'].concat(usedCategories);
+
+            bar.innerHTML = options.map(function (label) {
+                return '<button type="button" class="gallery-filter-pill' +
+                    (label === galleryActiveFilter ? ' is-active' : '') +
+                    '" data-filter="' + label + '">' + label + '</button>';
+            }).join('');
+
+            bar.querySelectorAll('.gallery-filter-pill').forEach(function (btn) {
+                btn.addEventListener('click', function () {
+                    galleryActiveFilter = btn.getAttribute('data-filter');
+                    renderGalleryFilterBar();
+                    renderGalleryGrid();
+                });
+            });
+
+        }
+
+        function renderGalleryGrid() {
 
             galleryModalGrid.innerHTML = '';
 
             GALLERY_IMAGES.forEach(function (src, index) {
+
+                if (galleryActiveFilter !== 'All' && GALLERY_CATEGORIES[src] !== galleryActiveFilter) return;
 
                 const item = document.createElement('div');
                 item.className = 'gallery-modal-item';
@@ -405,6 +460,14 @@ document.addEventListener('DOMContentLoaded', function () {
                 galleryModalGrid.appendChild(item);
 
             });
+
+        }
+
+        function openGalleryModal() {
+
+            galleryActiveFilter = 'All';
+            renderGalleryFilterBar();
+            renderGalleryGrid();
 
             galleryModal.classList.add('open');
             document.body.style.overflow = 'hidden';
@@ -702,6 +765,11 @@ document.addEventListener('DOMContentLoaded', function () {
 
         if (apptSummaryCard) apptSummaryCard.hidden = true;
 
+        // Remove any previously-rendered waitlist prompt -- it gets
+        // rebuilt fresh each render if the date is still fully booked.
+        const existingWaitlistBox = document.querySelector('.waitlist-box');
+        if (existingWaitlistBox) existingWaitlistBox.remove();
+
         if (!selectedApptDate) {
             apptSlotsDate.textContent = 'Select a date';
             if (apptSlotsSubtitle) apptSlotsSubtitle.textContent = 'Choose an available date from the calendar to see appointment times.';
@@ -734,6 +802,8 @@ document.addEventListener('DOMContentLoaded', function () {
         apptSlotsList.classList.add('is-fading-in');
         setTimeout(function () { apptSlotsList.classList.remove('is-fading-in'); }, 20);
 
+        let anySlotAvailable = false;
+
         STANDARD_TIME_SLOTS.forEach(function (time) {
 
             const pill = document.createElement('button');
@@ -747,6 +817,8 @@ document.addEventListener('DOMContentLoaded', function () {
             if (isBooked || isPastToday) {
                 pill.disabled = true;
             } else {
+
+                anySlotAvailable = true;
 
                 if (time === selectedApptTime) {
                     pill.classList.add('is-selected');
@@ -764,9 +836,73 @@ document.addEventListener('DOMContentLoaded', function () {
 
         });
 
+        // Every slot taken (or already past for today) -- offer the
+        // waitlist instead of just a wall of disabled buttons.
+        if (!anySlotAvailable) renderWaitlistPrompt(selectedApptDate);
+
         // Re-show the summary card if a time was already picked (e.g.
         // after re-rendering following a date change).
         if (selectedApptTime) showApptSummary();
+
+    }
+
+    // Shown when a date is fully booked -- lets the customer leave their
+    // name/number so staff can reach out if a slot opens up (e.g. from a
+    // cancellation). Saved to its own "waitlist" collection.
+    function renderWaitlistPrompt(dateStr) {
+
+        const box = document.createElement('div');
+        box.className = 'waitlist-box';
+        box.innerHTML =
+            '<p class="waitlist-title">🕒 Fully booked for this date</p>' +
+            '<p class="waitlist-sub">Leave your details and we\'ll message you first if a spot opens up.</p>' +
+            '<input type="text" class="waitlist-input" id="waitlistName" placeholder="Your name">' +
+            '<input type="tel" class="waitlist-input" id="waitlistContact" placeholder="09XXXXXXXXX" maxlength="11" inputmode="numeric">' +
+            '<span class="field-error" id="waitlistError"></span>' +
+            '<button type="button" class="waitlist-btn" id="waitlistSubmitBtn">Join the Waitlist</button>' +
+            '<p class="waitlist-success" id="waitlistSuccess" hidden>✓ You\'re on the list! We\'ll reach out if a slot frees up.</p>';
+
+        apptSlotsList.parentNode.insertBefore(box, apptSlotsList.nextSibling);
+
+        const contactInput = box.querySelector('#waitlistContact');
+        contactInput.addEventListener('input', function () {
+            contactInput.value = contactInput.value.replace(/\D/g, '').slice(0, 11);
+        });
+
+        box.querySelector('#waitlistSubmitBtn').addEventListener('click', function () {
+
+            const nameEl = box.querySelector('#waitlistName');
+            const errEl = box.querySelector('#waitlistError');
+            const btn = box.querySelector('#waitlistSubmitBtn');
+            const name = nameEl.value.trim();
+            const contact = contactInput.value.trim();
+
+            errEl.textContent = '';
+
+            if (!name) { errEl.textContent = 'Please enter your name.'; return; }
+            if (!/^09\d{9}$/.test(contact)) { errEl.textContent = 'Please enter a valid Philippine mobile number.'; return; }
+            if (!window.db) { errEl.textContent = 'Could not connect right now — please try again shortly.'; return; }
+
+            btn.disabled = true;
+            btn.textContent = 'Joining…';
+
+            window.db.collection('waitlist').add({
+                date: dateStr,
+                name: name,
+                contact: contact,
+                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            }).then(function () {
+                nameEl.hidden = true;
+                contactInput.hidden = true;
+                btn.hidden = true;
+                box.querySelector('#waitlistSuccess').hidden = false;
+            }).catch(function () {
+                errEl.textContent = 'Something went wrong. Please try again.';
+                btn.disabled = false;
+                btn.textContent = 'Join the Waitlist';
+            });
+
+        });
 
     }
 
@@ -1027,6 +1163,20 @@ document.addEventListener('DOMContentLoaded', function () {
 
         currentSuccessBookingId = bookingId || null;
         resetReminderOptin();
+
+        const calBtn = document.getElementById('bookingSuccessCalendarBtn');
+        if (calBtn) {
+            if (selectedApptDate && selectedApptTime) {
+                calBtn.href = googleCalendarLinkFor({
+                    date: selectedApptDate,
+                    time: selectedApptTime,
+                    service: selectedService ? selectedService.name : 'Appointment'
+                });
+                calBtn.hidden = false;
+            } else {
+                calBtn.hidden = true;
+            }
+        }
 
         if (bookingSuccessStep) bookingSuccessStep.classList.add('active');
 
@@ -1674,10 +1824,15 @@ document.addEventListener('DOMContentLoaded', function () {
                     showManageBookingStep('result');
 
                 })
-                .catch(function () {
+                .catch(function (err) {
                     manageBookingSubmitBtn.disabled = false;
                     manageBookingSubmitBtn.textContent = 'Find My Booking';
-                    if (errEl) errEl.textContent = 'Something went wrong. Please try again.';
+                    console.error('Manage booking lookup failed:', err);
+                    if (errEl) {
+                        errEl.textContent = (err && err.code === 'permission-denied')
+                            ? 'This feature needs an updated Firestore rules setup. Please contact the site owner.'
+                            : 'Something went wrong. Please try again.';
+                    }
                 });
 
         });
@@ -2580,11 +2735,22 @@ document.addEventListener('DOMContentLoaded', function () {
 
         }
 
+        const bulkBar = document.createElement('div');
+        bulkBar.className = 'admin-bulk-bar';
+        bulkBar.id = 'adminBulkBar';
+        bulkBar.hidden = true;
+        bulkBar.innerHTML =
+            '<span class="admin-bulk-count" id="adminBulkCount">0 selected</span>' +
+            '<button type="button" class="admin-bulk-btn admin-bulk-done" id="adminBulkDoneBtn">✓ Mark as Done</button>' +
+            '<button type="button" class="admin-bulk-btn admin-bulk-delete" id="adminBulkDeleteBtn">🗑 Delete</button>' +
+            '<button type="button" class="admin-bulk-clear" id="adminBulkClearBtn">Clear</button>';
+        adminDashBody.appendChild(bulkBar);
+
         const table = document.createElement('table');
         table.className = 'admin-booking-table';
 
         const thead = document.createElement('thead');
-        thead.innerHTML = '<tr><th>Name</th><th>Date</th><th>Time</th></tr>';
+        thead.innerHTML = '<tr><th class="admin-th-check"><input type="checkbox" id="adminSelectAllCheck" aria-label="Select all"></th><th>Name</th><th>Date</th><th>Time</th></tr>';
         table.appendChild(thead);
 
         const tbody = document.createElement('tbody');
@@ -2599,6 +2765,7 @@ document.addEventListener('DOMContentLoaded', function () {
             if (isNext) row.classList.add('is-next-appt');
 
             row.innerHTML =
+                '<td data-label="" class="admin-td-check"><input type="checkbox" class="admin-row-check" data-id="' + b.id + '" aria-label="Select this booking"></td>' +
                 '<td data-label="Name">' +
                 '<span class="admin-row-name-cell">' +
                 '<span class="admin-row-status-dot admin-status-' + b.status + '"></span>' +
@@ -2616,15 +2783,159 @@ document.addEventListener('DOMContentLoaded', function () {
         table.appendChild(tbody);
         adminDashBody.appendChild(table);
 
-        // Tap/click anywhere on a row to see the full details.
+        // Tap/click anywhere on a row to see the full details -- except
+        // the checkbox itself, which toggles selection instead.
         tbody.querySelectorAll('.admin-booking-row-compact').forEach(function (row) {
-            row.addEventListener('click', function () { openBookingDetailModal(row.getAttribute('data-id')); });
+            row.addEventListener('click', function (e) {
+                if (e.target.closest('.admin-row-check')) return;
+                openBookingDetailModal(row.getAttribute('data-id'));
+            });
         });
+
+        wireAdminBulkActions(tbody);
 
     }
 
     function findBooking(id) {
         return allBookings.filter(function (b) { return b.id === id; })[0];
+    }
+
+    // ---- Bulk actions: select several bookings at once, then mark them
+    // all Done or delete them all in one go, using a single Firestore
+    // batch write instead of one request per row. ----
+
+    function wireAdminBulkActions(tbody) {
+
+        const bulkBar = document.getElementById('adminBulkBar');
+        const bulkCount = document.getElementById('adminBulkCount');
+        const selectAllCheck = document.getElementById('adminSelectAllCheck');
+        const rowChecks = Array.prototype.slice.call(tbody.querySelectorAll('.admin-row-check'));
+
+        function updateBulkBar() {
+
+            const checked = rowChecks.filter(function (c) { return c.checked; });
+
+            if (bulkBar) bulkBar.hidden = checked.length === 0;
+            if (bulkCount) bulkCount.textContent = checked.length + (checked.length === 1 ? ' selected' : ' selected');
+
+            if (selectAllCheck) {
+                selectAllCheck.checked = checked.length > 0 && checked.length === rowChecks.length;
+                selectAllCheck.indeterminate = checked.length > 0 && checked.length < rowChecks.length;
+            }
+
+        }
+
+        rowChecks.forEach(function (checkbox) {
+            checkbox.addEventListener('change', updateBulkBar);
+            checkbox.addEventListener('click', function (e) { e.stopPropagation(); });
+        });
+
+        if (selectAllCheck) {
+            selectAllCheck.addEventListener('click', function (e) { e.stopPropagation(); });
+            selectAllCheck.addEventListener('change', function () {
+                rowChecks.forEach(function (c) { c.checked = selectAllCheck.checked; });
+                updateBulkBar();
+            });
+        }
+
+        function getSelectedIds() {
+            return rowChecks.filter(function (c) { return c.checked; }).map(function (c) { return c.getAttribute('data-id'); });
+        }
+
+        const clearBtn = document.getElementById('adminBulkClearBtn');
+        if (clearBtn) {
+            clearBtn.addEventListener('click', function () {
+                rowChecks.forEach(function (c) { c.checked = false; });
+                updateBulkBar();
+            });
+        }
+
+        const doneBtn = document.getElementById('adminBulkDoneBtn');
+        if (doneBtn) {
+
+            doneBtn.addEventListener('click', function () {
+
+                const ids = getSelectedIds();
+                if (!ids.length || !window.db) return;
+
+                if (!confirm('Mark ' + ids.length + (ids.length === 1 ? ' booking' : ' bookings') + ' as Done?')) return;
+
+                doneBtn.disabled = true;
+                doneBtn.textContent = 'Updating…';
+
+                const batch = window.db.batch();
+
+                ids.forEach(function (id) {
+                    const b = findBooking(id);
+                    if (!b) return;
+                    batch.update(window.db.collection('bookings').doc(id), { status: 'Done' });
+                    batch.update(window.db.collection('bookedSlots').doc(b.date + '_' + b.time), { status: 'Done' });
+                });
+
+                batch.commit().then(function () {
+
+                    ids.forEach(function (id) {
+                        const b = findBooking(id);
+                        if (b) b.status = 'Done';
+                    });
+
+                    renderBookingTable();
+
+                }).catch(function () {
+                    alert('Could not update some bookings. Please try again.');
+                    doneBtn.disabled = false;
+                    doneBtn.textContent = '✓ Mark as Done';
+                });
+
+            });
+
+        }
+
+        const deleteBtn = document.getElementById('adminBulkDeleteBtn');
+        if (deleteBtn) {
+
+            deleteBtn.addEventListener('click', function () {
+
+                const ids = getSelectedIds();
+                if (!ids.length || !window.db) return;
+
+                if (!confirm('Delete ' + ids.length + (ids.length === 1 ? ' booking' : ' bookings') + '? This cannot be undone.')) return;
+
+                deleteBtn.disabled = true;
+                deleteBtn.textContent = 'Deleting…';
+
+                const batch = window.db.batch();
+                const slotsToFree = [];
+
+                ids.forEach(function (id) {
+                    const b = findBooking(id);
+                    if (!b) return;
+                    batch.delete(window.db.collection('bookings').doc(id));
+                    slotsToFree.push(b.date + '_' + b.time);
+                });
+
+                batch.commit().then(function () {
+
+                    allBookings = allBookings.filter(function (b) { return ids.indexOf(b.id) === -1; });
+                    renderBookingTable();
+
+                    // Free up the slots too -- best-effort, doesn't block the UI update.
+                    const slotBatch = window.db.batch();
+                    slotsToFree.forEach(function (slotId) {
+                        slotBatch.delete(window.db.collection('bookedSlots').doc(slotId));
+                    });
+                    slotBatch.commit().catch(function () {});
+
+                }).catch(function () {
+                    alert('Could not delete some bookings. Please try again.');
+                    deleteBtn.disabled = false;
+                    deleteBtn.textContent = '🗑 Delete';
+                });
+
+            });
+
+        }
+
     }
 
     const adminBookingDetailModal = document.getElementById('adminBookingDetailModal');
@@ -3432,6 +3743,37 @@ document.addEventListener('DOMContentLoaded', function () {
         document.getElementById('adminCalOffToggle').addEventListener('click', function () {
             toggleOffDate(dateStr, isOff);
         });
+
+        renderAdminCalWaitlist(dateStr);
+
+    }
+
+    // Shows anyone waiting for this date to open up, fetched separately
+    // since it's a Firestore query rather than data already cached locally.
+    function renderAdminCalWaitlist(dateStr) {
+
+        if (!window.db || !adminDashCalDetail) return;
+
+        window.db.collection('waitlist').where('date', '==', dateStr).get().then(function (snapshot) {
+
+            // The panel may have moved on to a different date by the time
+            // this resolves -- only apply it if we're still looking at dateStr.
+            if (adminDashCalDetail.querySelector('.admin-cal-detail-date').textContent !== formatBookingDate(dateStr)) return;
+            if (snapshot.empty) return;
+
+            let waitlistHtml = '<p class="admin-cal-waitlist-heading">🕒 Waitlist (' + snapshot.size + ')</p>';
+
+            snapshot.forEach(function (doc) {
+                const w = doc.data();
+                waitlistHtml += '<div class="admin-cal-waitlist-item">' +
+                    '<span>' + w.name + '</span>' +
+                    '<a href="tel:' + w.contact + '">' + w.contact + '</a>' +
+                    '</div>';
+            });
+
+            adminDashCalDetail.insertAdjacentHTML('beforeend', waitlistHtml);
+
+        }).catch(function () {});
 
     }
 

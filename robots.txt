@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://astrazenika.github.io/nail-x-taytay/sitemap.xml
