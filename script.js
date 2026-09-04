@@ -174,19 +174,9 @@ document.addEventListener('DOMContentLoaded', function () {
     // or, if a date/time is already picked, opens the modal directly.
     const floatingBookBtn = document.getElementById('floatingBookBtn');
 
-    if (floatingBookBtn) {
-
-        floatingBookBtn.addEventListener('click', function (e) {
-
-            e.preventDefault();
-
-            if (typeof window.runPwaInstallFlow === 'function') {
-                window.runPwaInstallFlow();
-            }
-
-        });
-
-    }
+    // NOTE: this button's click behavior (Install App vs Manage Booking)
+    // is fully handled by the PWA install script near the bottom of this
+    // file, which knows the button's current mode. Nothing to wire here.
 
     // ===============================
     // MOBILE NAV: hamburger toggle
@@ -1755,7 +1745,7 @@ document.addEventListener('DOMContentLoaded', function () {
             '<div class="manage-booking-card-actions">' +
             '<a class="manage-booking-action-btn manage-booking-action-calendar" href="' + googleCalendarLinkFor(b) + '" target="_blank" rel="noopener">📅 Add to Google Calendar</a>' +
             '<button type="button" class="manage-booking-action-btn manage-booking-action-reschedule" data-action="reschedule">🔄 Request Reschedule</button>' +
-            '<button type="button" class="manage-booking-action-btn manage-booking-action-cancel" data-action="cancel">❌ Cancel Booking</button>' +
+            '<button type="button" class="manage-booking-action-btn manage-booking-action-cancel" data-action="cancel">❌ Request Cancellation</button>' +
             '</div>';
 
         card.querySelector('[data-action="reschedule"]').addEventListener('click', function () {
@@ -1772,42 +1762,20 @@ document.addEventListener('DOMContentLoaded', function () {
 
         });
 
+        // Cancellation goes through the admin, not straight to Firestore --
+        // this just opens Messenger with the request pre-filled, same as
+        // Reschedule. Staff cancels it from the Booking Log once confirmed.
         card.querySelector('[data-action="cancel"]').addEventListener('click', function () {
 
-            if (!confirm('Cancel your ' + b.service + ' appointment on ' + formatDateLabel(b.date) + ' at ' + formatTimeLabel(b.time) + '? This cannot be undone.')) return;
+            const msg = "Hi! I'd like to request to CANCEL my " + b.service +
+                ' appointment on ' + formatDateLabel(b.date) + ' at ' + formatTimeLabel(b.time) +
+                ' (Booking ID: ' + b.id + '). ';
 
-            if (!window.db) return;
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(msg).catch(function () {});
+            }
 
-            const cancelBtn = card.querySelector('[data-action="cancel"]');
-            cancelBtn.textContent = 'Cancelling…';
-            cancelBtn.disabled = true;
-
-            window.db.collection('bookings').doc(b.id).update({ status: 'Cancelled' })
-                .then(function () {
-
-                    // Free up the slot on the public calendar too.
-                    return window.db.collection('bookedSlots').doc(b.date + '_' + b.time).update({ status: 'Cancelled' }).catch(function () {});
-
-                })
-                .then(function () {
-                    card.querySelector('.manage-booking-card-status').textContent = 'Cancelled';
-                    card.querySelector('.manage-booking-card-actions').innerHTML = '<p class="manage-booking-cancelled-note">This booking has been cancelled.</p>';
-                    loadAvailability();
-
-                    // If this was the booking behind the floating "Manage
-                    // Booking" shortcut, that session is now over.
-                    try {
-                        const saved = JSON.parse(localStorage.getItem('nailxtaytay_active_booking') || 'null');
-                        if (saved && saved.id === b.id) localStorage.removeItem('nailxtaytay_active_booking');
-                    } catch (e) {}
-                    if (typeof window.refreshFloatingBookingState === 'function') window.refreshFloatingBookingState();
-
-                })
-                .catch(function () {
-                    alert('Could not cancel this booking. Please try again or message us directly.');
-                    cancelBtn.textContent = '❌ Cancel Booking';
-                    cancelBtn.disabled = false;
-                });
+            window.open('https://m.me/' + MESSENGER_PAGE_USERNAME, '_blank');
 
         });
 
