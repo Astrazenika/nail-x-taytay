@@ -50,3 +50,45 @@ self.addEventListener('fetch', function (event) {
   );
 
 });
+
+// ---- Appointment reminder push notifications ----
+// The actual reminder is triggered by a scheduled Cloud Function (see
+// /functions), which sends a push message at the right time even if
+// this site isn't open. This just displays it when it arrives.
+
+self.addEventListener('push', function (event) {
+
+  let data = { title: '💅 Appointment Reminder', body: 'Your Nail X Taytay appointment is coming up soon!' };
+
+  if (event.data) {
+    try { data = event.data.json(); } catch (e) { data.body = event.data.text(); }
+  }
+
+  event.waitUntil(
+    self.registration.showNotification(data.title, {
+      body: data.body,
+      icon: './images/icon-192.png',
+      badge: './images/icon-192.png',
+      tag: 'nailxtaytay-reminder'
+    })
+  );
+
+});
+
+self.addEventListener('notificationclick', function (event) {
+
+  event.notification.close();
+
+  event.waitUntil(
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then(function (clientList) {
+
+      for (let i = 0; i < clientList.length; i++) {
+        if ('focus' in clientList[i]) return clientList[i].focus();
+      }
+
+      if (clients.openWindow) return clients.openWindow('./');
+
+    })
+  );
+
+});

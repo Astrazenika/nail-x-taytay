@@ -1841,6 +1841,59 @@ img{
 
 }
 
+.reminder-optin-box{
+
+    margin-top:18px;
+    padding:16px 18px;
+    background:#F0F6F1;
+    border:1px solid #A8CDAE;
+    border-radius:14px;
+    text-align:center;
+
+}
+
+.reminder-optin-icon{
+    font-size:22px;
+    display:block;
+    margin-bottom:6px;
+}
+
+.reminder-optin-box p{
+    font-size:12.5px;
+    color:#4C6650;
+    line-height:1.5;
+    margin-bottom:12px;
+}
+
+.reminder-optin-btn{
+    width:100%;
+    padding:12px;
+    border:none;
+    border-radius:12px;
+    background:#3F7D4F;
+    color:#fff;
+    font-weight:600;
+    font-size:13px;
+    cursor:pointer;
+    transition:background .2s ease;
+}
+
+.reminder-optin-btn:hover{
+    background:#356B43;
+}
+
+.reminder-optin-btn:disabled{
+    opacity:.6;
+    cursor:default;
+}
+
+.reminder-optin-status{
+    font-size:12px !important;
+    font-weight:600;
+    color:#3F7D4F !important;
+    margin:10px 0 0 !important;
+}
+
 .booking-success-step .btn-outline,
 .booking-success-step .btn-primary{
 

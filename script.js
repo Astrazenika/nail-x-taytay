@@ -1013,7 +1013,9 @@ document.addEventListener('DOMContentLoaded', function () {
 
     }
 
-    function showBookingSuccess(instructionText, customerPhone) {
+    let currentSuccessBookingId = null;
+
+    function showBookingSuccess(instructionText, customerPhone, bookingId) {
 
         paymentStep.classList.remove('active');
 
@@ -1022,7 +1024,124 @@ document.addEventListener('DOMContentLoaded', function () {
 
         if (customerPhone) renderReferralCode(customerPhone);
 
+        currentSuccessBookingId = bookingId || null;
+        resetReminderOptin();
+
         if (bookingSuccessStep) bookingSuccessStep.classList.add('active');
+
+    }
+
+    // ===============================
+    // APPOINTMENT REMINDER PUSH NOTIFICATIONS
+    // Customer taps "Enable Appointment Reminder" after booking -> browser
+    // asks permission -> we save their push subscription onto their own
+    // booking doc. A scheduled Cloud Function (see /functions) checks for
+    // bookings starting soon and sends the actual reminder -- this all
+    // works even if the site isn't open at the time.
+    // ===============================
+
+    // Public key only -- safe to expose client-side. Generated once via
+    // `web-push generate-vapid-keys`; the matching private key lives only
+    // in the Cloud Function's config, never in this file.
+    const VAPID_PUBLIC_KEY = 'BJeNGcateRF8fFG6eMZbtua27ijAPt05WdYkWer69Ie0N_XWHso6CHsB1q6CnuXhy29rwmGV6QAPKVbWeAUzYJs';
+
+    function urlBase64ToUint8Array(base64String) {
+        const padding = '='.repeat((4 - base64String.length % 4) % 4);
+        const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+        const rawData = window.atob(base64);
+        const outputArray = new Uint8Array(rawData.length);
+        for (let i = 0; i < rawData.length; i++) outputArray[i] = rawData.charCodeAt(i);
+        return outputArray;
+    }
+
+    function resetReminderOptin() {
+
+        const box = document.getElementById('reminderOptinBox');
+        const btn = document.getElementById('reminderOptinBtn');
+        const status = document.getElementById('reminderOptinStatus');
+        if (!box) return;
+
+        const supported = 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window;
+
+        if (!supported || !currentSuccessBookingId) {
+            box.hidden = true;
+            return;
+        }
+
+        box.hidden = false;
+
+        if (Notification.permission === 'denied') {
+            if (btn) btn.hidden = true;
+            if (status) {
+                status.hidden = false;
+                status.textContent = "Notifications are blocked for this site in your browser settings.";
+                status.style.color = '#8A6E60';
+            }
+            return;
+        }
+
+        if (btn) {
+            btn.hidden = false;
+            btn.disabled = false;
+            btn.textContent = 'Enable Appointment Reminder';
+        }
+        if (status) status.hidden = true;
+
+    }
+
+    const reminderOptinBtn = document.getElementById('reminderOptinBtn');
+
+    if (reminderOptinBtn) {
+
+        reminderOptinBtn.addEventListener('click', function () {
+
+            if (!currentSuccessBookingId || !window.db) return;
+
+            reminderOptinBtn.disabled = true;
+            reminderOptinBtn.textContent = 'Enabling…';
+
+            navigator.serviceWorker.ready.then(function (registration) {
+
+                return registration.pushManager.subscribe({
+                    userVisibleOnly: true,
+                    applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
+                });
+
+            }).then(function (subscription) {
+
+                // Scoped update -- Firestore rules only allow the public to
+                // touch this one field on their own just-created booking.
+                return window.db.collection('bookings').doc(currentSuccessBookingId).update({
+                    pushSubscription: subscription.toJSON()
+                });
+
+            }).then(function () {
+
+                reminderOptinBtn.hidden = true;
+                const status = document.getElementById('reminderOptinStatus');
+                if (status) {
+                    status.hidden = false;
+                    status.textContent = "✓ Reminder enabled — we'll notify you before your appointment.";
+                }
+
+            }).catch(function (err) {
+
+                console.error('Could not enable reminder:', err);
+                reminderOptinBtn.disabled = false;
+                reminderOptinBtn.textContent = 'Enable Appointment Reminder';
+
+                const status = document.getElementById('reminderOptinStatus');
+                if (status) {
+                    status.hidden = false;
+                    status.style.color = '#B3261E';
+                    status.textContent = err && err.name === 'NotAllowedError'
+                        ? 'Notification permission was not granted.'
+                        : 'Could not enable reminders right now. Please try again.';
+                }
+
+            });
+
+        });
 
     }
 
@@ -1387,6 +1506,48 @@ document.addEventListener('DOMContentLoaded', function () {
     // before (repeat customer) or is trying to refer itself, the referral
     // is dropped -- this stops the same person from looping the same
     // referral link over and over to fake up referral counts.
+    // Atomically reserves a date+time slot AND creates the booking in one
+    // Firestore transaction. The slot doc's ID IS the date+time combo, so
+    // two customers racing for the same slot can't both succeed -- the
+    // transaction that loses the race sees the slot already exists and
+    // is rejected with SLOT_TAKEN, instead of silently double-booking.
+    function reserveBookingAtomically(bookingData) {
+
+        if (!window.db) return Promise.reject(new Error('NO_DB'));
+
+        const slotId = bookingData.date + '_' + bookingData.time;
+        const slotRef = window.db.collection('bookedSlots').doc(slotId);
+        const bookingRef = window.db.collection('bookings').doc();
+
+        return window.db.runTransaction(function (transaction) {
+
+            return transaction.get(slotRef).then(function (slotDoc) {
+
+                if (slotDoc.exists) {
+                    const err = new Error('This time slot was just taken by someone else.');
+                    err.code = 'SLOT_TAKEN';
+                    throw err;
+                }
+
+                transaction.set(slotRef, {
+                    date: bookingData.date,
+                    time: bookingData.time,
+                    status: 'Pending',
+                    bookingId: bookingRef.id
+                });
+
+                transaction.set(bookingRef, Object.assign({}, bookingData, {
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                }));
+
+            });
+
+        }).then(function () {
+            return bookingRef.id;
+        });
+
+    }
+
     function validateReferrer(contact, claimedReferrer) {
 
         if (!claimedReferrer) return Promise.resolve(null);
@@ -1435,6 +1596,8 @@ document.addEventListener('DOMContentLoaded', function () {
                 'Preferred Time: ' + time + '\n' +
                 'Notes: ' + notes;
 
+            let savedBookingId = null;
+
             function proceedToMessenger() {
 
                 if (navigator.clipboard && navigator.clipboard.writeText) {
@@ -1443,7 +1606,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
                 window.open('https://m.me/' + MESSENGER_PAGE_USERNAME, '_blank');
 
-                showBookingSuccess("We've copied your details — paste them into Messenger to finish arranging your booking with us.", contact);
+                showBookingSuccess("We've copied your details — paste them into Messenger to finish arranging your booking with us.", contact, savedBookingId);
 
             }
 
@@ -1456,7 +1619,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
                 validateReferrer(contact, referredByNumber).then(function (validReferrer) {
 
-                    return window.db.collection('bookings').add({
+                    return reserveBookingAtomically({
                         service: selectedService ? selectedService.name : '',
                         name: name,
                         contact: contact,
@@ -1465,28 +1628,28 @@ document.addEventListener('DOMContentLoaded', function () {
                         notes: notes,
                         price: (selectedService && typeof selectedService.price === 'number') ? selectedService.price : null,
                         status: 'Pending',
-                        referredBy: validReferrer,
-                        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                        referredBy: validReferrer
                     });
 
-                }).then(function (bookingRef) {
+                }).then(function (bookingId) {
 
+                    savedBookingId = bookingId;
                     bookedSlots.push(date + '|' + time);
-
-                    // Same doc ID as the booking itself, so the admin side can
-                    // find and update this slot's status later (e.g. when
-                    // marking the booking Done) without a separate lookup.
-                    return window.db.collection('bookedSlots').doc(bookingRef.id).set({
-                        date: date,
-                        time: time,
-                        status: 'Pending'
-                    });
-
-                }).then(function () {
                     proceedToMessenger();
+
                 }).catch(function (err) {
+
+                    if (err && err.code === 'SLOT_TAKEN') {
+                        alert("Sorry, this time slot was just booked by someone else. Please pick another time.");
+                        loadAvailability();
+                        resetApptPicker();
+                        closeModal();
+                        return;
+                    }
+
                     console.error('Could not save booking:', err);
                     proceedToMessenger();
+
                 });
 
             } else {
@@ -1521,6 +1684,8 @@ document.addEventListener('DOMContentLoaded', function () {
                 'Notes: ' + notes + '\n\n' +
                 'Here is my payment screenshot' + (inspoFiles.length ? ' and design inspo photo(s)' : '') + ':';
 
+            let savedBookingId = null;
+
             function proceedAfterSave() {
 
                 // On phones, the Web Share API can hand the inspo photos directly
@@ -1535,7 +1700,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         // If they cancel the share sheet, still fall back below
                     }).then(function () {
                         window.open('https://m.me/' + MESSENGER_PAGE_USERNAME, '_blank');
-                        showBookingSuccess("We've received your booking! Please finish sending it on Messenger so we can confirm.", contact);
+                        showBookingSuccess("We've received your booking! Please finish sending it on Messenger so we can confirm.", contact, savedBookingId);
                     });
 
                     return;
@@ -1554,7 +1719,8 @@ document.addEventListener('DOMContentLoaded', function () {
                     'Your booking details have been copied — please PASTE this message' +
                     (inspoFiles.length ? ', attach your inspo photo(s) and GCash payment screenshot,' : ' and attach your GCash payment screenshot,') +
                     ' then hit send in Messenger to confirm your appointment.',
-                    contact
+                    contact,
+                    savedBookingId
                 );
 
             }
@@ -1568,7 +1734,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
                 validateReferrer(contact, referredByNumber).then(function (validReferrer) {
 
-                    return window.db.collection('bookings').add({
+                    return reserveBookingAtomically({
                         service: selectedService ? selectedService.name : '',
                         name: name,
                         contact: contact,
@@ -1577,28 +1743,28 @@ document.addEventListener('DOMContentLoaded', function () {
                         notes: notes,
                         price: (selectedService && typeof selectedService.price === 'number') ? selectedService.price : null,
                         status: 'Pending',
-                        referredBy: validReferrer,
-                        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                        referredBy: validReferrer
                     });
 
-                }).then(function (bookingRef) {
+                }).then(function (bookingId) {
 
+                    savedBookingId = bookingId;
                     bookedSlots.push(date + '|' + time);
-
-                    // Public, PII-free record -- this is what lets any visitor's
-                    // calendar know a slot is taken without exposing names/contacts.
-                    // Same doc ID as the booking itself, so status stays in sync.
-                    return window.db.collection('bookedSlots').doc(bookingRef.id).set({
-                        date: date,
-                        time: time,
-                        status: 'Pending'
-                    });
-
-                }).then(function () {
                     proceedAfterSave();
+
                 }).catch(function (err) {
+
+                    if (err && err.code === 'SLOT_TAKEN') {
+                        alert("Sorry, this time slot was just booked by someone else. Please pick another time.");
+                        loadAvailability();
+                        resetApptPicker();
+                        closeModal();
+                        return;
+                    }
+
                     console.error('Could not save booking:', err);
                     proceedAfterSave();
+
                 });
 
             } else {
@@ -2338,8 +2504,10 @@ document.addEventListener('DOMContentLoaded', function () {
 
         // Keep the public bookedSlots record in sync -- this is what turns
         // the customer-facing calendar dot from green to red once a booking
-        // is completed. Best-effort: doesn't block the main status update.
-        window.db.collection('bookedSlots').doc(id).update({ status: nextStatus }).catch(function () {});
+        // is completed. The slot doc's ID is now the date+time combo (not
+        // the booking ID), so look it up directly by that same key.
+        // Best-effort: doesn't block the main status update.
+        window.db.collection('bookedSlots').doc(b.date + '_' + b.time).update({ status: nextStatus }).catch(function () {});
 
     }
 
@@ -2491,12 +2659,17 @@ document.addEventListener('DOMContentLoaded', function () {
 
             window.db.collection('bookedSlots').get().then(function (slotsSnap) {
 
-                const validIds = {};
-                allBookings.forEach(function (b) { validIds[b.id] = true; });
+                // A slot is valid if some current booking actually has that
+                // exact date+time -- the slot doc's ID IS that combo now
+                // (see reserveBookingAtomically), so this is a direct check.
+                const validSlotIds = {};
+                allBookings.forEach(function (b) {
+                    if (b.date && b.time) validSlotIds[b.date + '_' + b.time] = true;
+                });
 
                 const orphaned = [];
                 slotsSnap.forEach(function (doc) {
-                    if (!validIds[doc.id]) orphaned.push(doc.ref);
+                    if (!validSlotIds[doc.id]) orphaned.push(doc.ref);
                 });
 
                 if (!orphaned.length) {
