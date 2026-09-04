@@ -2747,7 +2747,10 @@ document.addEventListener('DOMContentLoaded', function () {
         adminCalendarView.style.display = showCalendar ? 'grid' : 'none';
         if (adminReferralsView) adminReferralsView.style.display = showReferrals ? 'block' : 'none';
 
-        if (showCalendar) loadAdminOffDates();
+        if (showCalendar) {
+            renderAdminCalendar(); // draw the day grid right away, even before off-dates load
+            loadAdminOffDates();
+        }
         if (showReferrals) renderAdminReferrals();
         if (showList) renderBookingTable();
 

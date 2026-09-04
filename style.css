@@ -6260,30 +6260,32 @@ h1, h2, h3, h4{
 .admin-calendar-view{
     display:grid;
     grid-template-columns:1fr 340px;
-    gap:20px;
-    border:1px solid #E8DDD6;
-    border-radius:16px;
-    padding:24px;
-    max-height:60vh;
+    gap:28px;
+    background:linear-gradient(165deg, #FFFBF6, #FBF3E8);
+    border:1px solid #EEDFC8;
+    border-radius:22px;
+    padding:26px;
+    max-height:64vh;
     overflow:auto;
+    box-shadow:0 4px 18px rgba(122,32,58,.06);
 }
 
 .admin-cal-nav{
     display:flex;
     align-items:center;
     justify-content:space-between;
-    margin-bottom:16px;
+    margin-bottom:18px;
     font-family:'Playfair Display', serif;
-    font-weight:600;
-    font-size:17px;
-    color:#2C2C2C;
+    font-weight:700;
+    font-size:18px;
+    color:#2A1A1A;
 }
 
 .admin-cal-nav button{
-    width:32px;
-    height:32px;
+    width:34px;
+    height:34px;
     border-radius:50%;
-    border:1px solid #E8DDD6;
+    border:1px solid #EEDFC8;
     background:#fff;
     color:#7A203A;
     font-size:17px;
@@ -6291,12 +6293,16 @@ h1, h2, h3, h4{
     display:flex;
     align-items:center;
     justify-content:center;
-    transition:.2s;
+    box-shadow:0 2px 6px rgba(122,32,58,.08);
+    transition:.22s ease;
 }
 
 .admin-cal-nav button:hover{
     background:#7A203A;
     color:#fff;
+    border-color:#7A203A;
+    transform:translateY(-1px);
+    box-shadow:0 6px 14px rgba(122,32,58,.24);
 }
 
 .admin-cal-weekdays{
@@ -6304,83 +6310,101 @@ h1, h2, h3, h4{
     grid-template-columns:repeat(7,1fr);
     text-align:center;
     font-family:'Poppins', sans-serif;
-    font-size:12px;
-    font-weight:600;
+    font-size:11.5px;
+    font-weight:700;
+    letter-spacing:.3px;
     color:#B8824F;
-    margin-bottom:8px;
+    margin-bottom:10px;
 }
 
 .admin-cal-grid{
     display:grid;
     grid-template-columns:repeat(7,1fr);
-    gap:6px;
+    gap:8px;
 }
 
 .admin-cal-day{
     position:relative;
-    min-height:64px;
+    min-height:60px;
     display:flex;
     flex-direction:column;
     align-items:center;
     justify-content:center;
-    gap:3px;
+    gap:4px;
     font-family:'Poppins', sans-serif;
-    font-size:13px;
-    border-radius:10px;
+    font-size:13.5px;
+    font-weight:600;
+    border-radius:14px;
     border:1.5px solid transparent;
-    background:#FBF7F3;
-    color:#2C2C2C;
+    background:#fff;
+    color:#3A2624;
     cursor:pointer;
     transition:.2s ease;
     padding:6px 4px;
+    box-shadow:0 1px 3px rgba(122,32,58,.04);
 }
 
 .admin-cal-day--empty{
-    min-height:64px;
+    min-height:60px;
+    visibility:hidden;
+    cursor:default;
+    box-shadow:none;
 }
 
 .admin-cal-day:hover{
-    border-color:#7A203A;
-}
-
-.admin-cal-day--empty{
-    visibility:hidden;
-    cursor:default;
+    border-color:#D4A25A;
+    transform:translateY(-2px);
+    box-shadow:0 6px 14px rgba(122,32,58,.12);
 }
 
 .admin-cal-day--today{
-    font-weight:700;
-    box-shadow:inset 0 0 0 1.5px #D8A25A;
+    box-shadow:inset 0 0 0 1.5px #D4A25A;
 }
 
-.admin-cal-day--selected{
-    background:#7A203A;
+.admin-cal-day--today:hover{
+    box-shadow:inset 0 0 0 1.5px #D4A25A, 0 6px 14px rgba(122,32,58,.12);
+}
+
+.admin-cal-day--selected,
+.admin-cal-day--selected:hover{
+    background:linear-gradient(150deg, #8A2745, #6E1B30);
+    border-color:#6E1B30;
     color:#fff;
+    transform:none;
+    box-shadow:0 8px 18px rgba(122,32,58,.35);
 }
 
 .admin-cal-day-count{
-    font-size:9.5px;
-    font-weight:600;
-    color:#2F855A;
-    line-height:1.2;
-    text-align:center;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    font-size:8.5px;
+    font-weight:700;
+    letter-spacing:.2px;
+    color:#3F7D4F;
+    background:rgba(63,125,79,.12);
+    padding:2px 6px;
+    border-radius:20px;
+    line-height:1.3;
+    white-space:nowrap;
 }
 
 .admin-cal-day--selected .admin-cal-day-count{
-    color:#C6F6D5;
+    color:#fff;
+    background:rgba(255,255,255,.22);
 }
 
 .admin-cal-day-off-tag{
     position:absolute;
-    top:2px;
-    right:2px;
+    top:3px;
+    right:3px;
     font-size:7px;
     font-weight:700;
     letter-spacing:.3px;
-    color:#C0392B;
-    background:#FEE2E2;
-    padding:1px 3px;
-    border-radius:4px;
+    color:#B3261E;
+    background:#FBE4E2;
+    padding:1.5px 4px;
+    border-radius:5px;
 }
 
 .admin-cal-day--selected .admin-cal-day-off-tag{
@@ -6391,7 +6415,7 @@ h1, h2, h3, h4{
     display:flex;
     align-items:center;
     gap:6px;
-    margin-top:16px;
+    margin-top:18px;
     font-family:'Poppins', sans-serif;
     font-size:11.5px;
     color:#7B6F67;
@@ -6407,13 +6431,13 @@ h1, h2, h3, h4{
 
 .admin-cal-legend-dot:first-of-type{ margin-left:0; }
 
-.admin-cal-legend-booked{ background:#2F855A; }
-.admin-cal-legend-off{ background:#C0392B; }
+.admin-cal-legend-booked{ background:#3F7D4F; }
+.admin-cal-legend-off{ background:#B3261E; }
 
 /* day detail side panel */
 .admin-cal-detail{
-    border-left:1px solid #E8DDD6;
-    padding-left:20px;
+    border-left:1px solid #EEDFC8;
+    padding-left:24px;
 }
 
 .admin-cal-detail-empty{
@@ -6421,58 +6445,64 @@ h1, h2, h3, h4{
     font-size:13px;
     color:#7B6F67;
     padding-top:12px;
-
     font-weight:600;
+    line-height:1.6;
 }
 
 .admin-cal-detail-date{
     font-family:'Playfair Display', serif;
-    font-size:19px;
+    font-size:20px;
     font-weight:700;
-    margin-bottom:14px;
+    color:#2A1A1A;
+    margin-bottom:16px;
 }
 
 .admin-cal-off-btn{
     width:100%;
-    padding:10px 14px;
-    border-radius:10px;
+    padding:12px 14px;
+    border-radius:12px;
     font-family:'Poppins', sans-serif;
     font-size:13px;
     font-weight:600;
     cursor:pointer;
-    margin-bottom:18px;
+    margin-bottom:20px;
     transition:.2s ease;
 }
 
 .admin-cal-off-btn.is-off{
-    background:#FEE2E2;
-    border:1.5px solid #C0392B;
-    color:#C0392B;
+    background:#FBE4E2;
+    border:1.5px solid #B3261E;
+    color:#B3261E;
 }
 
 .admin-cal-off-btn.is-off:hover{
-    background:#C0392B;
+    background:#B3261E;
     color:#fff;
 }
 
 .admin-cal-off-btn.is-on{
-    background:#FDF3EC;
-    border:1.5px solid #E8DDD6;
+    background:#fff;
+    border:1.5px solid #EEDFC8;
     color:#7A203A;
 }
 
 .admin-cal-off-btn.is-on:hover{
     border-color:#7A203A;
+    box-shadow:0 4px 12px rgba(122,32,58,.12);
 }
 
 .admin-cal-booking-item{
-    padding:10px 0;
-    border-bottom:1px solid #F1EAE3;
+    padding:12px 14px;
+    margin-bottom:10px;
+    background:#fff;
+    border:1px solid #F1E1D3;
+    border-radius:12px;
     font-family:'Poppins', sans-serif;
+    box-shadow:0 1px 4px rgba(122,32,58,.05);
 }
 
 .admin-cal-booking-item:last-child{
-    border-bottom:none;
+    margin-bottom:0;
 }
 
 .admin-cal-booking-time{
@@ -6484,12 +6514,13 @@ h1, h2, h3, h4{
 .admin-cal-booking-name{
     font-size:13px;
     color:#2C2C2C;
-    margin-top:2px;
+    margin-top:3px;
 }
 
 .admin-cal-booking-service{
     font-size:12px;
     color:#7B6F67;
+    margin-top:1px;
 }
 
 .admin-cal-detail-empty-day{
@@ -6504,13 +6535,20 @@ h1, h2, h3, h4{
 
     .admin-calendar-view{
         grid-template-columns:1fr;
+        padding:20px;
+        border-radius:18px;
+    }
+
+    .admin-cal-day{
+        min-height:52px;
+        border-radius:12px;
     }
 
     .admin-cal-detail{
         border-left:none;
-        border-top:1px solid #E8DDD6;
+        border-top:1px solid #EEDFC8;
         padding-left:0;
-        padding-top:16px;
+        padding-top:18px;
     }
 
 }
