@@ -35,7 +35,7 @@ html{
         justify-content:center;
         gap:16px;
         background:radial-gradient(circle at 50% 40%, #8A2745 0%, #5E1626 65%, #4A1220 100%);
-        animation:appSplashFadeOut .5s ease .95s forwards;
+        animation:appSplashFadeOut .6s ease 2.6s forwards;
     }
 
     .app-splash-glow{
@@ -6107,7 +6107,7 @@ h1, h2, h3, h4{
 /* ---------- counters ---------- */
 #adminDashboardModal .admin-dash-counters{
     display:grid;
-    grid-template-columns:repeat(4,1fr);
+    grid-template-columns:repeat(auto-fit, minmax(130px, 1fr));
     gap:14px;
     margin-bottom:22px;
 }
@@ -6245,6 +6245,7 @@ h1, h2, h3, h4{
 .admin-counter-pending .admin-counter-num{ color:#B7791F; }
 .admin-counter-done .admin-counter-num{ color:#2F855A; }
 .admin-counter-revenue .admin-counter-num{ color:#7A203A; }
+.admin-counter-installs .admin-counter-num{ color:#3B6FA0; }
 
 /* ---------- toolbar ---------- */
 #adminDashboardModal .admin-toolbar{

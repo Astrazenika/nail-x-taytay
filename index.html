@@ -677,8 +677,8 @@
     </footer>
 
     <button type="button" class="floating-book" id="floatingBookBtn" aria-label="Install App">
-        <svg class="floating-book-icon" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M12 3v12m0 0-4-4m4 4 4-4M5 17v2a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-2"/></svg>
-        <span>Install App</span>
+        <svg class="floating-book-icon" id="floatingBookIcon" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M12 3v12m0 0-4-4m4 4 4-4M5 17v2a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-2"/></svg>
+        <span id="floatingBookLabel">Install App</span>
     </button>
 
     <!-- ===========================
@@ -1170,6 +1170,10 @@
                 <div class="admin-counter admin-counter-revenue">
                     <span class="admin-counter-num" id="countRevenue">₱0</span>
                     <span class="admin-counter-label">Total Revenue</span>
+                </div>
+                <div class="admin-counter admin-counter-installs">
+                    <span class="admin-counter-num" id="countInstalls">0</span>
+                    <span class="admin-counter-label">App Installs</span>
                 </div>
             </div>
 

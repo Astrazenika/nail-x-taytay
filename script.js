@@ -1178,6 +1178,16 @@ document.addEventListener('DOMContentLoaded', function () {
         currentSuccessBookingId = bookingId || null;
         resetReminderOptin();
 
+        // Remember this booking on THIS device only -- lets the installed
+        // app show a "Manage Booking" shortcut for it until it's Done or
+        // Cancelled. Never sent anywhere; just local to the browser.
+        if (bookingId && customerPhone) {
+            try {
+                localStorage.setItem('nailxtaytay_active_booking', JSON.stringify({ id: bookingId, contact: customerPhone }));
+            } catch (e) {}
+            if (typeof window.refreshFloatingBookingState === 'function') window.refreshFloatingBookingState();
+        }
+
         const calBtn = document.getElementById('bookingSuccessCalendarBtn');
         if (calBtn) {
             if (selectedApptDate && selectedApptTime) {
@@ -1654,19 +1664,25 @@ document.addEventListener('DOMContentLoaded', function () {
         if (manageBookingNotFound) manageBookingNotFound.hidden = step !== 'notfound';
     }
 
-    function openManageBookingModal() {
+    function openManageBookingModal(prefillPhone) {
 
         showManageBookingStep('form');
         const errEl = document.getElementById('manageBookingError');
         if (errEl) errEl.textContent = '';
-        if (manageBookingPhoneInput) manageBookingPhoneInput.value = '';
+        if (manageBookingPhoneInput) manageBookingPhoneInput.value = prefillPhone || '';
 
         if (manageBookingModal) {
             manageBookingModal.classList.add('open');
             document.body.style.overflow = 'hidden';
         }
 
+        // One tap from the floating shortcut -- go straight to their
+        // result instead of making them press "Find My Booking" too.
+        if (prefillPhone && manageBookingSubmitBtn) manageBookingSubmitBtn.click();
+
     }
+
+    window.openManageBookingModal = openManageBookingModal;
 
     function closeManageBookingModal() {
         if (manageBookingModal) {
@@ -1777,6 +1793,15 @@ document.addEventListener('DOMContentLoaded', function () {
                     card.querySelector('.manage-booking-card-status').textContent = 'Cancelled';
                     card.querySelector('.manage-booking-card-actions').innerHTML = '<p class="manage-booking-cancelled-note">This booking has been cancelled.</p>';
                     loadAvailability();
+
+                    // If this was the booking behind the floating "Manage
+                    // Booking" shortcut, that session is now over.
+                    try {
+                        const saved = JSON.parse(localStorage.getItem('nailxtaytay_active_booking') || 'null');
+                        if (saved && saved.id === b.id) localStorage.removeItem('nailxtaytay_active_booking');
+                    } catch (e) {}
+                    if (typeof window.refreshFloatingBookingState === 'function') window.refreshFloatingBookingState();
+
                 })
                 .catch(function () {
                     alert('Could not cancel this booking. Please try again or message us directly.');
@@ -2454,6 +2479,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const countPending = document.getElementById('countPending');
     const countDone = document.getElementById('countDone');
     const countRevenue = document.getElementById('countRevenue');
+    const countInstalls = document.getElementById('countInstalls');
 
     let allBookings = []; // cached after each load, so search/filter never re-hits Firestore
 
@@ -2505,6 +2531,12 @@ document.addEventListener('DOMContentLoaded', function () {
         if (!window.db) {
             adminDashStatus.textContent = 'Firebase isn\'t set up yet -- see firebase-setup-guide.txt.';
             return;
+        }
+
+        if (countInstalls) {
+            window.db.collection('stats').doc('counters').get().then(function (doc) {
+                countInstalls.textContent = doc.exists ? (doc.data().appInstalls || 0) : 0;
+            }).catch(function () {});
         }
 
         window.db.collection('bookings').get()
@@ -3887,37 +3919,111 @@ document.addEventListener('DOMContentLoaded', function () {
     const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
     const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
 
-    function hideFloatingInstallButton() {
-        const btn = document.getElementById('floatingBookBtn');
-        if (btn) btn.hidden = true;
+    const floatBtn = document.getElementById('floatingBookBtn');
+    const floatIcon = document.getElementById('floatingBookIcon');
+    const floatLabel = document.getElementById('floatingBookLabel');
+
+    const ICONS = {
+        install: '<path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M12 3v12m0 0-4-4m4 4 4-4M5 17v2a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-2"/>',
+        manage: '<rect x="3.5" y="5" width="17" height="15" rx="2.5" fill="none" stroke="currentColor" stroke-width="2"/><path stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M3.5 9.5h17M8 3v3.5M16 3v3.5"/>'
+    };
+
+    let floatMode = 'hidden';
+
+    function setFloatingButton(mode) {
+
+        floatMode = mode;
+
+        if (!floatBtn) return;
+
+        if (mode === 'hidden') {
+            floatBtn.hidden = true;
+            return;
+        }
+
+        floatBtn.hidden = false;
+        floatBtn.setAttribute('aria-label', mode === 'manage' ? 'Manage Booking' : 'Install App');
+        if (floatIcon) floatIcon.innerHTML = ICONS[mode];
+        if (floatLabel) floatLabel.textContent = mode === 'manage' ? 'Manage Booking' : 'Install App';
+
     }
 
-    // Already installed and running as an app -- nothing to offer, and
-    // the floating button (which is otherwise always visible) should
-    // disappear since there's nothing left for it to do.
+    // Checks whether THIS device has a booking it just made that's still
+    // active, and shows/hides the floating "Manage Booking" shortcut
+    // accordingly. Runs on load, and again right after a new booking or
+    // a cancellation -- exposed globally so those flows can trigger it.
+    function refreshFloatingBookingState() {
+
+        if (!isStandalone) return; // this shortcut is app-only, per request
+
+        let saved = null;
+        try { saved = JSON.parse(localStorage.getItem('nailxtaytay_active_booking') || 'null'); } catch (e) {}
+
+        if (!saved || !saved.id) {
+            setFloatingButton('hidden');
+            return;
+        }
+
+        if (!window.db) {
+            setFloatingButton('hidden');
+            return;
+        }
+
+        window.db.collection('bookings').doc(saved.id).get().then(function (doc) {
+
+            if (!doc.exists || doc.data().status !== 'Pending') {
+                // Booking is Done, Cancelled, or gone -- the "session" is over.
+                try { localStorage.removeItem('nailxtaytay_active_booking'); } catch (e) {}
+                setFloatingButton('hidden');
+                return;
+            }
+
+            setFloatingButton('manage');
+
+        }).catch(function () {
+            setFloatingButton('hidden');
+        });
+
+    }
+
+    window.refreshFloatingBookingState = refreshFloatingBookingState;
+
+    // ---- Install counter -- purely a number the admin can see, no
+    // personal info attached. Fires once per real install. ----
+    function recordAppInstall() {
+        if (!window.db) return;
+        window.db.collection('stats').doc('counters').set({
+            appInstalls: firebase.firestore.FieldValue.increment(1)
+        }, { merge: true }).catch(function () {});
+    }
+
     if (isStandalone) {
-        hideFloatingInstallButton();
-        return;
+
+        // Already installed: no install prompt to offer -- but there
+        // might be a "Manage Booking" shortcut to show instead.
+        refreshFloatingBookingState();
+
+    } else {
+
+        setFloatingButton('install');
+
+        // Android/Chrome: browser tells us installation is genuinely available
+        // right now -- capture it so the floating button can use it directly
+        // (skipping the manual-instructions fallback) when the user taps it.
+        window.addEventListener('beforeinstallprompt', function (e) {
+            e.preventDefault();
+            deferredInstallPrompt = e;
+        });
+
+        window.addEventListener('appinstalled', function () {
+            deferredInstallPrompt = null;
+            recordAppInstall();
+            refreshFloatingBookingState(); // will show "Manage Booking" if applicable, else hide
+        });
+
     }
 
-    // Android/Chrome: browser tells us installation is genuinely available
-    // right now -- capture it so the floating button can use it directly
-    // (skipping the manual-instructions fallback) when the user taps it.
-    window.addEventListener('beforeinstallprompt', function (e) {
-        e.preventDefault();
-        deferredInstallPrompt = e;
-    });
-
-    window.addEventListener('appinstalled', function () {
-        deferredInstallPrompt = null;
-        hideFloatingInstallButton();
-    });
-
-    // Floating circle button: kept more permissive on purpose (per an
-    // earlier request) -- always visible, and falls back to manual
-    // instructions when there's no native prompt to trigger, since iOS
-    // Safari never supports one at all.
-    window.runPwaInstallFlow = function () {
+    function runPwaInstallFlow() {
 
         if (deferredInstallPrompt) {
 
@@ -3944,6 +4050,29 @@ document.addEventListener('DOMContentLoaded', function () {
 
         }
 
-    };
+    }
+
+    window.runPwaInstallFlow = runPwaInstallFlow;
+
+    if (floatBtn) {
+
+        floatBtn.addEventListener('click', function () {
+
+            if (floatMode === 'manage') {
+
+                let saved = null;
+                try { saved = JSON.parse(localStorage.getItem('nailxtaytay_active_booking') || 'null'); } catch (e) {}
+
+                if (saved && saved.contact && typeof window.openManageBookingModal === 'function') {
+                    window.openManageBookingModal(saved.contact);
+                }
+
+            } else {
+                runPwaInstallFlow();
+            }
+
+        });
+
+    }
 
 });
