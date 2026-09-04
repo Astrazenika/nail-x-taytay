@@ -281,28 +281,60 @@ img{
 
     display:inline-flex;
     align-items:center;
-    gap:5px;
+    gap:6px;
     background:#7A203A;
     color:#fff;
     border:none;
+    font-family:'Work Sans', sans-serif;
     font-size:11.5px;
-    font-weight:700;
-    letter-spacing:.5px;
+    font-weight:600;
+    letter-spacing:.6px;
     text-transform:uppercase;
-    padding:8px 14px;
-    border-radius:20px;
+    padding:9px 16px;
+    border-radius:999px;
     cursor:pointer;
-    transition:background .18s ease, transform .18s ease;
+    box-shadow:0 3px 10px rgba(122,32,58,.22);
+    transition:background-color .25s ease, transform .25s ease, box-shadow .25s ease;
 
+}
+
+.install-app-btn-icon{
+    flex-shrink:0;
+    display:block;
+}
+
+.install-app-btn span{
+    line-height:1;
+    display:block;
+}
+
+.install-app-btn:hover{
+    background:#8C2A47;
+    transform:translateY(-1px);
+    box-shadow:0 6px 16px rgba(122,32,58,.3);
+}
+
+.install-app-btn:active{
+    transform:translateY(0);
+    box-shadow:0 2px 6px rgba(122,32,58,.22);
+}
+
+.install-app-btn:focus-visible{
+    outline:2px solid #D4A25A;
+    outline-offset:2px;
 }
 
 .install-app-btn[hidden]{
     display:none !important;
 }
 
-.install-app-btn:hover{
-    background:#8A2745;
-    transform:translateY(-1px);
+@media (max-width:1100px) and (min-width:769px){
+
+    .install-app-btn{
+        padding:8px 13px;
+        font-size:10.5px;
+    }
+
 }
 
 .navbar a.active,
@@ -2820,26 +2852,9 @@ img{
 
 }
 
-.floating-book-inner{
-
-    display:contents;
-
-}
-
-.floating-book-inner[hidden]{
-    display:none !important;
-}
-
 .floating-book-install-icon{
     font-size:22px;
     line-height:1;
-}
-
-.floating-book-inner--install span:last-child{
-    font-size:8px;
-    letter-spacing:.5px;
-    margin-top:2px;
-    text-transform:uppercase;
 }
 
 /* ===============================

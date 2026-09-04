@@ -166,20 +166,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
             e.preventDefault();
 
-            // While an install prompt is available, this button offers
-            // that instead of jumping to the booking calendar.
-            if (floatingBookBtn.dataset.mode === 'install' && typeof window.runPwaInstallFlow === 'function') {
+            if (typeof window.runPwaInstallFlow === 'function') {
                 window.runPwaInstallFlow();
-                return;
-            }
-
-            const dateEl = document.getElementById('bookingDate');
-            const timeEl = document.getElementById('bookingTime');
-
-            if (dateEl && timeEl && dateEl.value && timeEl.value) {
-                openModal(pendingServiceIndex);
-            } else {
-                scrollToApptPicker();
             }
 
         });
@@ -3000,64 +2988,52 @@ if ('serviceWorker' in navigator) {
 document.addEventListener('DOMContentLoaded', function () {
 
     const installBtn = document.getElementById('installAppBtn');
-    const floatBtn = document.getElementById('floatingBookBtn');
-    const floatBookInner = floatBtn ? floatBtn.querySelector('.floating-book-inner--book') : null;
-    const floatInstallInner = floatBtn ? floatBtn.querySelector('.floating-book-inner--install') : null;
-
-    if (!installBtn && !floatBtn) return;
 
     let deferredInstallPrompt = null;
 
     const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
     const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
 
-    function showInstallUI() {
-
-        if (installBtn) installBtn.hidden = false;
-
-        // Swap the floating button into "install" mode -- same circle,
-        // same spot, just offering the app install instead of booking
-        // while it's available.
-        if (floatBtn && floatBookInner && floatInstallInner) {
-            floatBtn.dataset.mode = 'install';
-            floatBookInner.hidden = true;
-            floatInstallInner.hidden = false;
-        }
-
-    }
-
-    function hideInstallUI() {
-
-        if (installBtn) installBtn.hidden = true;
-
-        if (floatBtn && floatBookInner && floatInstallInner) {
-            delete floatBtn.dataset.mode;
-            floatBookInner.hidden = false;
-            floatInstallInner.hidden = true;
-        }
-
-    }
-
     // Already installed and running as an app -- nothing to offer.
     if (isStandalone) return;
 
-    // Android/Chrome: browser tells us installation is available.
+    // Android/Chrome: browser tells us installation is genuinely available
+    // right now. This is the only signal the header button acts on.
     window.addEventListener('beforeinstallprompt', function (e) {
         e.preventDefault();
         deferredInstallPrompt = e;
-        showInstallUI();
+        if (installBtn) installBtn.hidden = false;
     });
 
     window.addEventListener('appinstalled', function () {
-        hideInstallUI();
+        if (installBtn) installBtn.hidden = true;
         deferredInstallPrompt = null;
     });
 
-    // iOS Safari never fires beforeinstallprompt -- show the prompt
-    // there too, with manual step-by-step instructions instead.
-    if (isIOS) showInstallUI();
+    // Header button: strictly native-only. It only ever appears when the
+    // browser has confirmed installability, and it never shows an alert --
+    // if there's nothing to prompt, clicking it silently does nothing
+    // (which in practice shouldn't happen, since it's hidden otherwise).
+    if (installBtn) {
 
-    function runInstallFlow() {
+        installBtn.addEventListener('click', function () {
+
+            if (!deferredInstallPrompt) return;
+
+            deferredInstallPrompt.prompt();
+            deferredInstallPrompt.userChoice.finally(function () {
+                deferredInstallPrompt = null;
+            });
+
+        });
+
+    }
+
+    // Floating circle button: kept more permissive on purpose (per an
+    // earlier request) -- always visible, and falls back to manual
+    // instructions when there's no native prompt to trigger, since iOS
+    // Safari never supports one at all.
+    window.runPwaInstallFlow = function () {
 
         if (deferredInstallPrompt) {
 
@@ -3084,12 +3060,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
         }
 
-    }
-
-    // Exposed so the floating button's own click handler (registered
-    // elsewhere) can trigger this when it's in install mode.
-    window.runPwaInstallFlow = runInstallFlow;
-
-    if (installBtn) installBtn.addEventListener('click', runInstallFlow);
+    };
 
 });
