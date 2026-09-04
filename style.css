@@ -35,7 +35,7 @@ html{
         justify-content:center;
         gap:16px;
         background:radial-gradient(circle at 50% 40%, #8A2745 0%, #5E1626 65%, #4A1220 100%);
-        animation:appSplashFadeOut .6s ease 2.6s forwards;
+        animation:appSplashFadeOut .6s ease 10s forwards;
     }
 
     .app-splash-glow{

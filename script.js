@@ -3916,7 +3916,9 @@ document.addEventListener('DOMContentLoaded', function () {
     let deferredInstallPrompt = null;
 
     const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
-    const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+    function isRunningStandalone() {
+        return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+    }
 
     const floatBtn = document.getElementById('floatingBookBtn');
     const floatIcon = document.getElementById('floatingBookIcon');
@@ -3953,7 +3955,7 @@ document.addEventListener('DOMContentLoaded', function () {
     // a cancellation -- exposed globally so those flows can trigger it.
     function refreshFloatingBookingState() {
 
-        if (!isStandalone) return; // this shortcut is app-only, per request
+        if (!isRunningStandalone()) return; // this shortcut is app-only, per request
 
         let saved = null;
         try { saved = JSON.parse(localStorage.getItem('nailxtaytay_active_booking') || 'null'); } catch (e) {}
@@ -3996,7 +3998,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }, { merge: true }).catch(function () {});
     }
 
-    if (isStandalone) {
+    if (isRunningStandalone()) {
 
         // Already installed: no install prompt to offer -- but there
         // might be a "Manage Booking" shortcut to show instead.
@@ -4017,8 +4019,22 @@ document.addEventListener('DOMContentLoaded', function () {
         window.addEventListener('appinstalled', function () {
             deferredInstallPrompt = null;
             recordAppInstall();
-            refreshFloatingBookingState(); // will show "Manage Booking" if applicable, else hide
+            // Install just happened -- the "Install App" prompt should never
+            // show again in this tab, even though this tab itself is still
+            // a regular browser window and not the new standalone one.
+            setFloatingButton('hidden');
+            refreshFloatingBookingState(); // switches to "Manage Booking" if applicable
         });
+
+        // Some browsers finish installing and flip this SAME window into
+        // standalone mode without a full reload -- catch that transition
+        // too, instead of only relying on the one-time check at load.
+        var standaloneQuery = window.matchMedia('(display-mode: standalone)');
+        if (standaloneQuery.addEventListener) {
+            standaloneQuery.addEventListener('change', function (e) {
+                if (e.matches) refreshFloatingBookingState();
+            });
+        }
 
     }
 

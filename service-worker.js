@@ -3,7 +3,7 @@
 // it opens instantly even on a flaky connection (booking data itself
 // still needs the internet, since it lives in Firestore).
 
-const CACHE_NAME = 'nailxtaytay-shell-v1';
+const CACHE_NAME = 'nailxtaytay-shell-v2';
 const SHELL_FILES = [
   './',
   './index.html',
