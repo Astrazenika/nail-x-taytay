@@ -585,7 +585,10 @@ document.addEventListener('DOMContentLoaded', function () {
     const apptCalPrev = document.getElementById('apptCalPrev');
     const apptCalNext = document.getElementById('apptCalNext');
     const apptSlotsDate = document.getElementById('apptSlotsDate');
+    const apptSlotsSubtitle = document.getElementById('apptSlotsSubtitle');
     const apptSlotsList = document.getElementById('apptSlotsList');
+    const apptSummaryCard = document.getElementById('apptSummaryCard');
+    const apptSummaryContinueBtn = document.getElementById('apptSummaryContinueBtn');
     const apptChosenSummary = document.getElementById('apptChosenSummary');
     const apptChosenText = document.getElementById('apptChosenText');
     const apptChangeBtn = document.getElementById('apptChangeBtn');
@@ -696,20 +699,29 @@ document.addEventListener('DOMContentLoaded', function () {
 
         if (!apptSlotsList) return;
 
+        if (apptSummaryCard) apptSummaryCard.hidden = true;
+
         if (!selectedApptDate) {
             apptSlotsDate.textContent = 'Select a date';
-            apptSlotsList.innerHTML = '<p class="appt-slots-empty">Choose a date on the calendar to see open times.</p>';
+            if (apptSlotsSubtitle) apptSlotsSubtitle.textContent = 'Choose an available date from the calendar to see appointment times.';
+            apptSlotsList.innerHTML =
+                '<div class="appt-slots-empty">' +
+                '<svg viewBox="0 0 24 24" width="34" height="34"><rect x="3.5" y="5" width="17" height="15" rx="2.5" fill="none" stroke="currentColor" stroke-width="1.4"/><path stroke="currentColor" stroke-width="1.4" stroke-linecap="round" d="M3.5 9.5h17M8 3v3.5M16 3v3.5"/><circle cx="8.2" cy="14" r="1" fill="currentColor"/><circle cx="12" cy="14" r="1" fill="currentColor"/><circle cx="15.8" cy="14" r="1" fill="currentColor"/></svg>' +
+                '<span>Choose a date on the calendar to see open times.</span>' +
+                '</div>';
             return;
         }
 
         apptSlotsDate.textContent = formatDateLabel(selectedApptDate);
+        if (apptSlotsSubtitle) apptSlotsSubtitle.textContent = 'Choose a time that works best for you.';
 
         // Off days show up as a heads-up tag on the calendar, but no
         // time slots are offered for that date -- pick another day.
         if (blockedDates.indexOf(selectedApptDate) !== -1) {
 
+            if (apptSlotsSubtitle) apptSlotsSubtitle.textContent = '';
             apptSlotsList.innerHTML =
-                '<p class="appt-slots-empty">We\'re closed on this date. Please choose another day on the calendar.</p>';
+                '<div class="appt-slots-empty"><span>We\'re closed on this date. Please choose another day on the calendar.</span></div>';
             return;
 
         }
@@ -718,6 +730,8 @@ document.addEventListener('DOMContentLoaded', function () {
         const nowMinutes = todayDate.getTime() === new Date().setHours(0, 0, 0, 0) ? (new Date().getHours() * 60 + new Date().getMinutes()) : 0;
 
         apptSlotsList.innerHTML = '';
+        apptSlotsList.classList.add('is-fading-in');
+        setTimeout(function () { apptSlotsList.classList.remove('is-fading-in'); }, 20);
 
         STANDARD_TIME_SLOTS.forEach(function (time) {
 
@@ -739,7 +753,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
                 pill.addEventListener('click', function () {
                     selectedApptTime = time;
-                    confirmApptSelection();
+                    renderApptSlots();
+                    showApptSummary();
                 });
 
             }
@@ -748,6 +763,29 @@ document.addEventListener('DOMContentLoaded', function () {
 
         });
 
+        // Re-show the summary card if a time was already picked (e.g.
+        // after re-rendering following a date change).
+        if (selectedApptTime) showApptSummary();
+
+    }
+
+    // Small confirmation card shown once both a date and time are picked --
+    // gives the customer a moment to review before the booking modal opens.
+    function showApptSummary() {
+
+        if (!apptSummaryCard || !selectedApptDate || !selectedApptTime) return;
+
+        const dateEl = document.getElementById('apptSummaryDate');
+        const timeEl = document.getElementById('apptSummaryTime');
+        if (dateEl) dateEl.textContent = formatDateLabel(selectedApptDate);
+        if (timeEl) timeEl.textContent = formatTimeLabel(selectedApptTime);
+
+        apptSummaryCard.hidden = false;
+
+    }
+
+    if (apptSummaryContinueBtn) {
+        apptSummaryContinueBtn.addEventListener('click', confirmApptSelection);
     }
 
     function confirmApptSelection() {
@@ -1990,7 +2028,104 @@ document.addEventListener('DOMContentLoaded', function () {
 
         countRevenue.textContent = '₱' + revenue.toLocaleString();
 
+        renderNextAppointment();
+
     }
+
+    // ---- Next Appointment widget: finds the soonest upcoming Pending
+    // booking, shows a live countdown, and flags that same row in the
+    // table so it's easy to spot who's coming up next. ----
+
+    let nextApptBookingId = null;
+
+    function getBookingDateTime(b) {
+        if (!b || !b.date || !b.time) return null;
+        const dt = new Date(b.date + 'T' + b.time + ':00');
+        return isNaN(dt.getTime()) ? null : dt;
+    }
+
+    function findNextAppointment() {
+
+        const now = new Date();
+        let best = null;
+        let bestDt = null;
+
+        allBookings.forEach(function (b) {
+            if (b.status !== 'Pending') return;
+            const dt = getBookingDateTime(b);
+            if (!dt || dt < now) return;
+            if (!bestDt || dt < bestDt) {
+                bestDt = dt;
+                best = b;
+            }
+        });
+
+        return best ? { booking: best, dt: bestDt } : null;
+
+    }
+
+    function formatCountdown(dt) {
+
+        const diffMs = dt.getTime() - Date.now();
+        if (diffMs <= 0) return { text: 'Starting now', level: 'urgent' };
+
+        const mins = Math.round(diffMs / 60000);
+
+        if (mins < 60) return { text: 'in ' + mins + (mins === 1 ? ' min' : ' mins'), level: mins <= 30 ? 'urgent' : 'warning' };
+
+        const hours = Math.floor(mins / 60);
+        const remMins = mins % 60;
+
+        if (hours < 24) {
+            const text = 'in ' + hours + 'h' + (remMins ? ' ' + remMins + 'm' : '');
+            return { text: text, level: hours <= 2 ? 'warning' : 'normal' };
+        }
+
+        const days = Math.floor(hours / 24);
+        return { text: days === 1 ? 'Tomorrow' : 'in ' + days + ' days', level: 'normal' };
+
+    }
+
+    function renderNextAppointment() {
+
+        const widget = document.getElementById('adminNextAppt');
+        if (!widget) return;
+
+        const next = findNextAppointment();
+
+        if (!next) {
+            widget.hidden = true;
+            nextApptBookingId = null;
+            return;
+        }
+
+        nextApptBookingId = next.booking.id;
+
+        const detailEl = document.getElementById('adminNextApptDetail');
+        const countdownEl = document.getElementById('adminNextApptCountdown');
+        const countdown = formatCountdown(next.dt);
+
+        if (detailEl) {
+            detailEl.textContent = next.booking.name + ' — ' + formatBookingDate(next.booking.date) + ', ' + formatBookingTime(next.booking.time);
+        }
+
+        if (countdownEl) countdownEl.textContent = countdown.text;
+
+        widget.classList.remove('is-warning', 'is-urgent');
+        if (countdown.level === 'warning') widget.classList.add('is-warning');
+        if (countdown.level === 'urgent') widget.classList.add('is-urgent');
+
+        widget.hidden = false;
+
+    }
+
+    // Live tick so the countdown stays accurate without needing a manual
+    // refresh -- cheap since it only touches text/classes, no re-fetch.
+    setInterval(function () {
+        if (adminDashboardModal && adminDashboardModal.classList.contains('open')) {
+            renderNextAppointment();
+        }
+    }, 30000);
 
     function getFilteredBookings() {
 
@@ -2018,6 +2153,12 @@ document.addEventListener('DOMContentLoaded', function () {
 
             return true;
 
+        }).sort(function (a, b) {
+            // Soonest date+time first -- date is YYYY-MM-DD and time is
+            // HH:MM, so a plain string comparison sorts chronologically.
+            const aKey = (a.date || '') + ' ' + (a.time || '');
+            const bKey = (b.date || '') + ' ' + (b.time || '');
+            return aKey < bKey ? -1 : aKey > bKey ? 1 : 0;
         });
 
     }
@@ -2071,11 +2212,15 @@ document.addEventListener('DOMContentLoaded', function () {
             row.className = 'admin-booking-row-compact';
             row.setAttribute('data-id', b.id);
 
+            const isNext = b.id === nextApptBookingId;
+            if (isNext) row.classList.add('is-next-appt');
+
             row.innerHTML =
                 '<td data-label="Name">' +
                 '<span class="admin-row-name-cell">' +
                 '<span class="admin-row-status-dot admin-status-' + b.status + '"></span>' +
                 '<span>' + b.name + '</span>' +
+                (isNext ? '<span class="admin-row-next-badge" title="This is the next upcoming appointment">⚠ Next</span>' : '') +
                 '</span>' +
                 '</td>' +
                 '<td data-label="Date">' + formatBookingDate(b.date) + '</td>' +
@@ -2987,8 +3132,6 @@ if ('serviceWorker' in navigator) {
 
 document.addEventListener('DOMContentLoaded', function () {
 
-    const installBtn = document.getElementById('installAppBtn');
-
     let deferredInstallPrompt = null;
 
     const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
@@ -2998,36 +3141,16 @@ document.addEventListener('DOMContentLoaded', function () {
     if (isStandalone) return;
 
     // Android/Chrome: browser tells us installation is genuinely available
-    // right now. This is the only signal the header button acts on.
+    // right now -- capture it so the floating button can use it directly
+    // (skipping the manual-instructions fallback) when the user taps it.
     window.addEventListener('beforeinstallprompt', function (e) {
         e.preventDefault();
         deferredInstallPrompt = e;
-        if (installBtn) installBtn.hidden = false;
     });
 
     window.addEventListener('appinstalled', function () {
-        if (installBtn) installBtn.hidden = true;
         deferredInstallPrompt = null;
     });
-
-    // Header button: strictly native-only. It only ever appears when the
-    // browser has confirmed installability, and it never shows an alert --
-    // if there's nothing to prompt, clicking it silently does nothing
-    // (which in practice shouldn't happen, since it's hidden otherwise).
-    if (installBtn) {
-
-        installBtn.addEventListener('click', function () {
-
-            if (!deferredInstallPrompt) return;
-
-            deferredInstallPrompt.prompt();
-            deferredInstallPrompt.userChoice.finally(function () {
-                deferredInstallPrompt = null;
-            });
-
-        });
-
-    }
 
     // Floating circle button: kept more permissive on purpose (per an
     // earlier request) -- always visible, and falls back to manual
