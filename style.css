@@ -6326,6 +6326,7 @@ h1, h2, h3, h4{
 .admin-cal-day{
     position:relative;
     min-height:60px;
+    min-width:0;
     display:flex;
     flex-direction:column;
     align-items:center;
@@ -6537,6 +6538,11 @@ h1, h2, h3, h4{
         grid-template-columns:1fr;
         padding:20px;
         border-radius:18px;
+        overflow-x:hidden;
+    }
+
+    .admin-cal-panel{
+        min-width:0;
     }
 
     .admin-cal-day{

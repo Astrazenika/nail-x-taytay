@@ -3152,7 +3152,8 @@ document.addEventListener('DOMContentLoaded', function () {
             if (dayBookings.length) {
                 const countLabel = document.createElement('span');
                 countLabel.className = 'admin-cal-day-count';
-                countLabel.textContent = dayBookings.length + (dayBookings.length === 1 ? ' booking' : ' bookings');
+                countLabel.textContent = dayBookings.length;
+                countLabel.title = dayBookings.length + (dayBookings.length === 1 ? ' booking' : ' bookings');
                 btn.appendChild(countLabel);
             }
 
