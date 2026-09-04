@@ -3209,27 +3209,57 @@ document.addEventListener('DOMContentLoaded', function () {
                     if (b.date && b.time) validSlotIds[b.date + '_' + b.time] = true;
                 });
 
+                const existingSlotIds = {};
+                slotsSnap.forEach(function (doc) { existingSlotIds[doc.id] = true; });
+
                 const orphaned = [];
                 slotsSnap.forEach(function (doc) {
                     if (!validSlotIds[doc.id]) orphaned.push(doc.ref);
                 });
 
-                if (!orphaned.length) {
-                    alert('No leftover calendar dots found — everything is already in sync.');
+                // The other direction: active bookings (made before the
+                // atomic reservation system, or otherwise missing their
+                // slot doc) that show up as "still open" on the customer
+                // calendar even though they're really taken.
+                const missing = [];
+                allBookings.forEach(function (b) {
+                    if (!b.date || !b.time) return;
+                    if (b.status !== 'Pending' && b.status !== 'Done') return;
+                    const slotId = b.date + '_' + b.time;
+                    if (!existingSlotIds[slotId]) missing.push({ id: slotId, date: b.date, time: b.time, status: b.status });
+                });
+
+                if (!orphaned.length && !missing.length) {
+                    alert('No calendar sync issues found — everything is already in sync.');
                     return null;
                 }
 
-                if (!confirm('Found ' + orphaned.length + ' leftover slot' + (orphaned.length === 1 ? '' : 's') + ' with no matching booking. Remove ' + (orphaned.length === 1 ? 'it' : 'them') + ' from the calendar?')) {
+                const parts = [];
+                if (orphaned.length) parts.push(orphaned.length + ' leftover slot' + (orphaned.length === 1 ? '' : 's') + ' with no matching booking');
+                if (missing.length) parts.push(missing.length + ' booking' + (missing.length === 1 ? '' : 's') + ' missing from the calendar (shows as open when it isn\'t)');
+
+                if (!confirm('Found: ' + parts.join(', and ') + '. Fix this now?')) {
                     return null;
                 }
 
-                return Promise.all(orphaned.map(function (ref) { return ref.delete(); })).then(function () {
-                    alert('Cleaned up ' + orphaned.length + ' leftover calendar ' + (orphaned.length === 1 ? 'dot' : 'dots') + '.');
+                const jobs = orphaned.map(function (ref) { return ref.delete(); });
+
+                missing.forEach(function (m) {
+                    jobs.push(window.db.collection('bookedSlots').doc(m.id).set({
+                        date: m.date,
+                        time: m.time,
+                        status: m.status
+                    }));
+                });
+
+                return Promise.all(jobs).then(function () {
+                    alert('Fixed ' + orphaned.length + ' leftover ' + (orphaned.length === 1 ? 'dot' : 'dots') + ' and ' + missing.length + ' missing calendar ' + (missing.length === 1 ? 'entry' : 'entries') + '.');
+                    loadAvailability();
                 });
 
             }).catch(function (err) {
                 console.error('Cleanup failed:', err);
-                alert('Could not check for leftover slots. Make sure your Firestore rules allow admin read/delete on bookedSlots, then try again.');
+                alert('Could not check for calendar sync issues. Make sure your Firestore rules allow admin read/write on bookedSlots, then try again.');
             }).finally(function () {
                 adminCleanupSlotsBtn.disabled = false;
                 adminCleanupSlotsBtn.textContent = '🧹 Clean Up Calendar';
