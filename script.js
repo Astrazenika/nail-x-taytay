@@ -1721,7 +1721,7 @@ document.addEventListener('DOMContentLoaded', function () {
         card.innerHTML =
             '<span class="manage-booking-card-status">' + b.status + '</span>' +
             '<p class="manage-booking-card-service">' + b.service + '</p>' +
-            '<p class="manage-booking-card-datetime">📅 ' + formatBookingDate(b.date) + ' · ⏰ ' + formatBookingTime(b.time) + '</p>' +
+            '<p class="manage-booking-card-datetime">📅 ' + formatDateLabel(b.date) + ' · ⏰ ' + formatTimeLabel(b.time) + '</p>' +
             '<div class="manage-booking-card-actions">' +
             '<a class="manage-booking-action-btn manage-booking-action-calendar" href="' + googleCalendarLinkFor(b) + '" target="_blank" rel="noopener">📅 Add to Google Calendar</a>' +
             '<button type="button" class="manage-booking-action-btn manage-booking-action-reschedule" data-action="reschedule">🔄 Request Reschedule</button>' +
@@ -1731,7 +1731,7 @@ document.addEventListener('DOMContentLoaded', function () {
         card.querySelector('[data-action="reschedule"]').addEventListener('click', function () {
 
             const msg = "Hi! I'd like to request a reschedule for my " + b.service +
-                ' appointment on ' + formatBookingDate(b.date) + ' at ' + formatBookingTime(b.time) +
+                ' appointment on ' + formatDateLabel(b.date) + ' at ' + formatTimeLabel(b.time) +
                 ' (Booking ID: ' + b.id + '). ';
 
             if (navigator.clipboard && navigator.clipboard.writeText) {
@@ -1744,7 +1744,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         card.querySelector('[data-action="cancel"]').addEventListener('click', function () {
 
-            if (!confirm('Cancel your ' + b.service + ' appointment on ' + formatBookingDate(b.date) + ' at ' + formatBookingTime(b.time) + '? This cannot be undone.')) return;
+            if (!confirm('Cancel your ' + b.service + ' appointment on ' + formatDateLabel(b.date) + ' at ' + formatTimeLabel(b.time) + '? This cannot be undone.')) return;
 
             if (!window.db) return;
 
