@@ -3503,7 +3503,20 @@ img{
 
     }
 
-    .gallery-grid,
+    .gallery-grid{
+
+        grid-template-columns:repeat(2,1fr);
+        gap:12px;
+
+    }
+
+    .gallery-item{
+
+        aspect-ratio:1/1;
+        border-radius:12px;
+
+    }
+
     .footer-info{
 
         grid-template-columns:1fr;
