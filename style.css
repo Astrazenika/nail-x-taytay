@@ -323,6 +323,7 @@ img{
 #services,
 #pricing,
 #gallery,
+#reviews,
 #contact{
 
     scroll-margin-top:100px;
@@ -3723,6 +3724,224 @@ img{
 
 }
 
+.reviews-summary{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:14px;
+    margin:0 auto 40px;
+    padding:20px 32px;
+    background:#FFFBF7;
+    border:1px solid rgba(212,162,90,.3);
+    border-radius:20px;
+    flex-wrap:wrap;
+    box-shadow:0 10px 30px rgba(125,32,58,.06);
+}
+
+.reviews-summary-score{
+    font-family:'Playfair Display', serif;
+    font-size:32px;
+    font-weight:700;
+    color:#7A1E32;
+    line-height:1;
+}
+
+.reviews-summary-stars{
+    color:#D9A85C;
+    font-size:19px;
+    letter-spacing:1px;
+}
+
+.reviews-summary-count{
+    font-size:13.5px;
+    color:#8A6E60;
+    font-weight:500;
+    max-width:260px;
+    text-align:left;
+}
+
+.reviews-summary-empty .reviews-summary-score,
+.reviews-summary-empty .reviews-summary-stars{
+    color:#D9C3B0;
+}
+
+.review-photo{
+    width:100%;
+    height:160px;
+    object-fit:cover;
+    border-radius:12px;
+    margin-bottom:16px;
+    display:block;
+    cursor:pointer;
+    transition:transform .3s var(--lux-ease, ease), filter .3s ease;
+}
+
+.review-photo:hover{
+    transform:scale(1.03);
+    filter:brightness(1.03);
+}
+
+.review-photo:focus-visible{
+    outline:2px solid #D4A25A;
+    outline-offset:3px;
+}
+
+.review-date{
+    color:#B69C8C;
+    font-weight:500;
+}
+
+.review-card{
+    opacity:0;
+    animation:reviewCardIn .6s var(--lux-ease, ease) both;
+}
+
+@keyframes reviewCardIn{
+    from{ opacity:0; transform:translateY(16px); }
+    to{ opacity:1; transform:translateY(0); }
+}
+
+@media (prefers-reduced-motion: reduce){
+    .review-card{
+        animation:none;
+        opacity:1;
+    }
+}
+
+.reviews-cta{
+    margin-top:8px;
+}
+
+.reviews-share-wrap{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    margin-top:32px;
+}
+
+.reviews-share-label{
+    font-size:11px;
+    font-weight:600;
+    letter-spacing:.6px;
+    text-transform:uppercase;
+    color:#7A1E32;
+    margin:0 0 10px;
+}
+
+.reviews-share-link{
+    display:inline-flex;
+    align-items:center;
+    gap:10px;
+    width:100%;
+    max-width:520px;
+    margin:0 auto;
+    padding:10px 10px 10px 18px;
+    background:#FFFBF7;
+    border:1px solid rgba(212,162,90,.35);
+    border-radius:999px;
+    box-shadow:0 6px 18px rgba(125,32,58,.05);
+}
+
+.reviews-share-link-icon{
+    flex-shrink:0;
+    color:#B69C8C;
+}
+
+.reviews-share-link span{
+    flex:1;
+    min-width:0;
+    font-size:12.5px;
+    color:#8A6E60;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+}
+
+.reviews-share-link button{
+    flex-shrink:0;
+    background:#7A1E32;
+    color:#fff;
+    border:none;
+    border-radius:999px;
+    padding:9px 18px;
+    font-size:12px;
+    font-weight:600;
+    letter-spacing:.2px;
+    cursor:pointer;
+    box-shadow:0 4px 10px rgba(122,32,58,.2);
+    transition:background .22s ease, transform .22s ease, box-shadow .22s ease;
+}
+
+.reviews-share-link button:hover{
+    background:#8C2540;
+    transform:translateY(-1px);
+    box-shadow:0 6px 14px rgba(122,32,58,.28);
+}
+
+.reviews-share-link button:active{
+    transform:translateY(0) scale(.97);
+}
+
+@media(max-width:640px){
+
+    .reviews-share-wrap{
+        margin-top:26px;
+        width:100%;
+    }
+
+    .reviews-share-link{
+        max-width:calc(100% - 32px);
+        border-radius:18px;
+        flex-wrap:wrap;
+        justify-content:center;
+        padding:14px 16px;
+    }
+
+    .reviews-share-link span{
+        flex:1 1 100%;
+        white-space:normal;
+        word-break:break-all;
+        text-align:center;
+        order:1;
+    }
+
+    .reviews-share-link-icon{
+        order:0;
+    }
+
+    .reviews-share-link button{
+        order:2;
+        margin-top:2px;
+    }
+
+}
+
+@media (prefers-reduced-motion: reduce){
+    .reviews-share-link button{
+        transition:none;
+    }
+    .reviews-share-link button:hover{
+        transform:none;
+    }
+}
+
+#reviews .section-heading h2{
+    font-size:44px;
+}
+
+@media(max-width:640px){
+    #reviews .section-heading h2{
+        font-size:33px;
+    }
+    .reviews-summary{
+        padding:16px 22px;
+        gap:10px;
+    }
+    .reviews-summary-count{
+        text-align:center;
+    }
+}
+
 /* ===============================
    RESPONSIVE: ABOUT / PRICING / REVIEWS
 ================================= */
@@ -5363,6 +5582,102 @@ h1, h2, h3, h4{
     margin-bottom:18px;
     max-width:560px;
 
+}
+
+.admin-reviews-list{
+    display:flex;
+    flex-direction:column;
+    gap:14px;
+}
+
+.admin-review-item{
+    display:flex;
+    gap:16px;
+    align-items:flex-start;
+    background:#FBF7F3;
+    border:1px solid #E8DDD6;
+    border-radius:14px;
+    padding:16px;
+}
+
+.admin-review-item-photo{
+    width:56px;
+    height:56px;
+    border-radius:10px;
+    object-fit:cover;
+    flex-shrink:0;
+}
+
+.admin-review-item-photo-blank{
+    background:#EFE6DD;
+}
+
+.admin-review-item-body{
+    flex:1;
+    min-width:0;
+}
+
+.admin-review-item-top{
+    display:flex;
+    align-items:center;
+    flex-wrap:wrap;
+    gap:8px;
+    margin-bottom:6px;
+}
+
+.admin-review-item-stars{
+    color:#D9A85C;
+    font-size:13px;
+    letter-spacing:1px;
+}
+
+.admin-review-item-name{
+    font-family:'Poppins', sans-serif;
+    font-size:13px;
+    font-weight:600;
+    color:#2C2C2C;
+}
+
+.admin-review-item-date{
+    font-size:11.5px;
+    color:#8A6E60;
+}
+
+.admin-review-item-comment{
+    font-size:13.5px;
+    color:#5C4038;
+    line-height:1.6;
+    margin:0;
+    word-break:break-word;
+}
+
+.admin-review-delete-btn{
+    flex-shrink:0;
+    width:34px;
+    height:34px;
+    border-radius:10px;
+    border:1px solid #E8DDD6;
+    background:#fff;
+    color:#B94A3F;
+    font-size:15px;
+    cursor:pointer;
+    transition:background .2s ease, border-color .2s ease;
+}
+
+.admin-review-delete-btn:hover:not(:disabled){
+    background:#FBEAEA;
+    border-color:#E8B8B8;
+}
+
+.admin-review-delete-btn:disabled{
+    opacity:.5;
+    cursor:not-allowed;
+}
+
+@media(max-width:640px){
+    .admin-review-item{
+        flex-wrap:wrap;
+    }
 }
 
 .admin-referrals-table{

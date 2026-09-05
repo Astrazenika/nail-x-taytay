@@ -163,6 +163,7 @@
             <a href="#services">Services</a>
             <a href="#pricing">Pricing</a>
             <a href="#gallery">Gallery</a>
+            <a href="#reviews">Reviews</a>
             <a href="#contact">Contact</a>
             <a href="#" id="myReferralsNavLink">My Referrals</a>
             <a href="#" id="manageBookingNavLink">Manage Booking</a>
@@ -569,6 +570,40 @@
         </div>
 
         <button type="button" class="btn-primary center-btn" id="viewFullGalleryBtn">View Gallery</button>
+
+    </section>
+
+    <!-- ===========================
+            REVIEWS
+    ============================ -->
+
+    <section class="reviews-section" id="reviews">
+
+        <div class="section-heading">
+            <h2>What Our Clients Say</h2>
+            <span class="divider"></span>
+        </div>
+
+        <div class="reviews-summary" id="reviewsSummary">
+            <span class="reviews-summary-score" id="reviewsSummaryScore">0.0</span>
+            <span class="reviews-summary-stars" id="reviewsSummaryStars" aria-hidden="true"></span>
+            <span class="reviews-summary-count" id="reviewsSummaryCount"></span>
+        </div>
+
+        <div class="reviews-grid" id="reviewsGrid">
+            <!-- Reviews are inserted here by script.js -->
+        </div>
+
+        <a href="review.html" class="btn-primary center-btn reviews-cta">Rate Your Experience</a>
+
+        <div class="reviews-share-wrap">
+            <p class="reviews-share-label">Share This Review Page</p>
+            <div class="reviews-share-link">
+                <svg class="reviews-share-link-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M9 15l6-6M10 7l1-1a4 4 0 015.66 5.66l-1.4 1.4M14 17l-1 1a4 4 0 01-5.66-5.66l1.4-1.4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+                <span id="reviewsShareLinkText">https://astrazenika.github.io/nail-x-taytay/review.html</span>
+                <button type="button" id="reviewsShareLinkCopyBtn">Copy Link</button>
+            </div>
+        </div>
 
     </section>
 
@@ -1190,6 +1225,7 @@
                 <button type="button" id="adminTabTable" class="admin-view-tab is-active">Table View</button>
                 <button type="button" id="adminTabCalendar" class="admin-view-tab">Calendar View</button>
                 <button type="button" id="adminTabReferrals" class="admin-view-tab">Referrals</button>
+                <button type="button" id="adminTabReviews" class="admin-view-tab">Reviews</button>
                 <button type="button" id="adminTabArchive" class="admin-view-tab">Archive</button>
             </div>
 
@@ -1254,6 +1290,16 @@
 
                 <div class="admin-referrals-list" id="adminReferralsList">
                     <p class="admin-dash-status">Loading referral data…</p>
+                </div>
+
+            </div>
+
+            <div class="admin-reviews-view" id="adminReviewsView" style="display:none;">
+
+                <p class="admin-referrals-note">Client ratings and comments submitted from the "Rate Your Experience" page. These show publicly on the homepage — customers cannot edit or delete their own review, but you can remove one here if needed (e.g. spam or inappropriate content).</p>
+
+                <div class="admin-reviews-list" id="adminReviewsList">
+                    <p class="admin-dash-status">Loading reviews…</p>
                 </div>
 
             </div>

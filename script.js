@@ -349,6 +349,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
     }
 
+    window.openSingleImageLightbox = openSingleImageLightbox;
+
     const apptLocationPhoto = document.querySelector('.appt-location-photo img');
 
     if (apptLocationPhoto) {
@@ -3283,10 +3285,12 @@ document.addEventListener('DOMContentLoaded', function () {
     const adminTabTable = document.getElementById('adminTabTable');
     const adminTabCalendar = document.getElementById('adminTabCalendar');
     const adminTabReferrals = document.getElementById('adminTabReferrals');
+    const adminTabReviews = document.getElementById('adminTabReviews');
     const adminTabArchive = document.getElementById('adminTabArchive');
     const adminToolbar = document.getElementById('adminToolbar');
     const adminCalendarView = document.getElementById('adminCalendarView');
     const adminReferralsView = document.getElementById('adminReferralsView');
+    const adminReviewsView = document.getElementById('adminReviewsView');
     const adminDashCalGrid = document.getElementById('adminDashCalGrid');
     const adminDashCalMonthLabel = document.getElementById('adminDashCalMonthLabel');
     const adminDashCalPrev = document.getElementById('adminDashCalPrev');
@@ -3304,14 +3308,16 @@ document.addEventListener('DOMContentLoaded', function () {
 
         const showCalendar = view === 'calendar';
         const showReferrals = view === 'referrals';
+        const showReviews = view === 'reviews';
         const showArchive = view === 'archive';
-        const showTable = !showCalendar && !showReferrals && !showArchive;
+        const showTable = !showCalendar && !showReferrals && !showReviews && !showArchive;
 
         adminArchiveMode = showArchive;
 
         adminTabTable.classList.toggle('is-active', showTable);
         adminTabCalendar.classList.toggle('is-active', showCalendar);
         if (adminTabReferrals) adminTabReferrals.classList.toggle('is-active', showReferrals);
+        if (adminTabReviews) adminTabReviews.classList.toggle('is-active', showReviews);
         if (adminTabArchive) adminTabArchive.classList.toggle('is-active', showArchive);
 
         const showList = showTable || showArchive;
@@ -3319,12 +3325,14 @@ document.addEventListener('DOMContentLoaded', function () {
         adminDashBody.style.display = showList ? 'block' : 'none';
         adminCalendarView.style.display = showCalendar ? 'grid' : 'none';
         if (adminReferralsView) adminReferralsView.style.display = showReferrals ? 'block' : 'none';
+        if (adminReviewsView) adminReviewsView.style.display = showReviews ? 'block' : 'none';
 
         if (showCalendar) {
             renderAdminCalendar(); // draw the day grid right away, even before off-dates load
             loadAdminOffDates();
         }
         if (showReferrals) renderAdminReferrals();
+        if (showReviews) renderAdminReviews();
         if (showList) renderBookingTable();
 
     }
@@ -3332,6 +3340,7 @@ document.addEventListener('DOMContentLoaded', function () {
     if (adminTabTable) adminTabTable.addEventListener('click', function () { switchAdminView('table'); });
     if (adminTabCalendar) adminTabCalendar.addEventListener('click', function () { switchAdminView('calendar'); });
     if (adminTabReferrals) adminTabReferrals.addEventListener('click', function () { switchAdminView('referrals'); });
+    if (adminTabReviews) adminTabReviews.addEventListener('click', function () { switchAdminView('reviews'); });
     if (adminTabArchive) adminTabArchive.addEventListener('click', function () { switchAdminView('archive'); });
 
     // ===============================
@@ -3667,6 +3676,92 @@ document.addEventListener('DOMContentLoaded', function () {
 
     }
 
+    function renderAdminReviews() {
+
+        const list = document.getElementById('adminReviewsList');
+        if (!list) return;
+
+        if (!window.db) {
+            list.innerHTML = '<p class="admin-dash-status">Could not connect right now.</p>';
+            return;
+        }
+
+        list.innerHTML = '<p class="admin-dash-status">Loading reviews…</p>';
+
+        function escapeHtml(str) {
+            const div = document.createElement('div');
+            div.textContent = str || '';
+            return div.innerHTML;
+        }
+
+        function starString(rating) {
+            const full = Math.max(1, Math.min(5, parseInt(rating, 10) || 0));
+            return '★★★★★☆☆☆☆☆'.slice(5 - full, 10 - full);
+        }
+
+        window.db.collection('reviews').orderBy('createdAt', 'desc').get().then(function (snapshot) {
+
+            if (snapshot.empty) {
+                list.innerHTML = '<p class="admin-dash-status">No reviews submitted yet.</p>';
+                return;
+            }
+
+            let html = '';
+
+            snapshot.forEach(function (doc) {
+
+                const r = doc.data();
+                const dateLabel = (r.createdAt && r.createdAt.toDate)
+                    ? r.createdAt.toDate().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+                    : '';
+
+                html +=
+                    '<div class="admin-review-item" data-review-id="' + doc.id + '">' +
+                    (r.photo ? '<img class="admin-review-item-photo" src="' + r.photo + '" alt="' + escapeHtml(r.name) + '\'s nail photo">' : '<div class="admin-review-item-photo admin-review-item-photo-blank"></div>') +
+                    '<div class="admin-review-item-body">' +
+                    '<div class="admin-review-item-top">' +
+                    '<span class="admin-review-item-stars">' + starString(r.rating) + '</span>' +
+                    '<span class="admin-review-item-name">' + escapeHtml(r.name) + '</span>' +
+                    (dateLabel ? '<span class="admin-review-item-date">' + dateLabel + '</span>' : '') +
+                    '</div>' +
+                    '<p class="admin-review-item-comment">' + escapeHtml(r.comment) + '</p>' +
+                    '</div>' +
+                    '<button type="button" class="admin-review-delete-btn" title="Delete this review">🗑</button>' +
+                    '</div>';
+
+            });
+
+            list.innerHTML = html;
+
+            Array.prototype.slice.call(list.querySelectorAll('.admin-review-delete-btn')).forEach(function (btn) {
+
+                btn.addEventListener('click', function () {
+
+                    const item = btn.closest('.admin-review-item');
+                    const reviewId = item.dataset.reviewId;
+                    const name = item.querySelector('.admin-review-item-name').textContent;
+
+                    if (!confirm('Delete the review from ' + name + '? This cannot be undone and it will disappear from the homepage right away.')) return;
+
+                    btn.disabled = true;
+
+                    window.db.collection('reviews').doc(reviewId).delete().then(function () {
+                        item.remove();
+                    }).catch(function () {
+                        alert('Could not delete this review right now. Please try again.');
+                        btn.disabled = false;
+                    });
+
+                });
+
+            });
+
+        }).catch(function () {
+            list.innerHTML = '<p class="admin-dash-status">Could not load reviews right now.</p>';
+        });
+
+    }
+
     function loadAdminOffDates() {
 
         if (!window.db) return;
@@ -3896,6 +3991,151 @@ document.addEventListener('DOMContentLoaded', function () {
         });
 
     }
+
+});
+
+// ===============================
+// PUBLIC REVIEWS -- fetches client-submitted reviews (from review.html)
+// and renders them on the homepage, along with an average rating summary.
+// Photos are stored as compressed base64 strings directly on the review
+// document, so no extra Firebase Storage setup is needed.
+// ===============================
+document.addEventListener('DOMContentLoaded', function () {
+
+    const copyBtn = document.getElementById('reviewsShareLinkCopyBtn');
+    const linkText = document.getElementById('reviewsShareLinkText');
+    if (!copyBtn || !linkText) return;
+
+    copyBtn.addEventListener('click', function () {
+
+        const url = linkText.textContent.trim();
+        const originalLabel = copyBtn.textContent;
+
+        function showCopied() {
+            copyBtn.textContent = '✓ Copied!';
+            setTimeout(function () { copyBtn.textContent = originalLabel; }, 1800);
+        }
+
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(url).then(showCopied).catch(function () {
+                copyBtn.textContent = 'Press Ctrl+C';
+            });
+        } else {
+            // Older browsers: select the text so the person can copy manually
+            const range = document.createRange();
+            range.selectNodeContents(linkText);
+            const selection = window.getSelection();
+            selection.removeAllRanges();
+            selection.addRange(range);
+            copyBtn.textContent = 'Press Ctrl+C';
+        }
+
+    });
+
+});
+
+document.addEventListener('DOMContentLoaded', function () {
+
+    const reviewsGrid = document.getElementById('reviewsGrid');
+    if (!reviewsGrid) return; // not on this page
+
+    const reviewsSummary = document.getElementById('reviewsSummary');
+    const reviewsSummaryScore = document.getElementById('reviewsSummaryScore');
+    const reviewsSummaryStars = document.getElementById('reviewsSummaryStars');
+    const reviewsSummaryCount = document.getElementById('reviewsSummaryCount');
+
+    function starString(rating) {
+        const full = Math.round(rating);
+        return '★★★★★☆☆☆☆☆'.slice(5 - full, 10 - full);
+    }
+
+    function escapeHtml(str) {
+        const div = document.createElement('div');
+        div.textContent = str || '';
+        return div.innerHTML;
+    }
+
+    function formatReviewDate(timestamp) {
+        if (!timestamp || !timestamp.toDate) return '';
+        return timestamp.toDate().toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+    }
+
+    function showEmptyState() {
+        if (!reviewsSummary) return;
+        reviewsSummary.classList.add('reviews-summary-empty');
+        reviewsSummaryScore.textContent = '0.0';
+        reviewsSummaryStars.textContent = starString(0);
+        reviewsSummaryCount.textContent = 'No reviews yet — be the first to share your experience!';
+    }
+
+    if (!window.db) {
+        showEmptyState();
+        return;
+    }
+
+    window.db.collection('reviews').orderBy('createdAt', 'desc').limit(24).get().then(function (snapshot) {
+
+        if (snapshot.empty) {
+            showEmptyState();
+            return;
+        }
+
+        let total = 0;
+        let html = '';
+        let cardIndex = 0;
+
+        snapshot.forEach(function (doc) {
+
+            const r = doc.data();
+            const rating = Math.max(1, Math.min(5, parseInt(r.rating, 10) || 0));
+            total += rating;
+
+            const dateLabel = formatReviewDate(r.createdAt);
+
+            html +=
+                '<div class="review-card" style="animation-delay:' + Math.min(cardIndex * 0.08, 0.5) + 's">' +
+                (r.photo ? '<img class="review-photo" src="' + r.photo + '" alt="' + escapeHtml(r.name) + '\'s nail photo" loading="lazy" tabindex="0" role="button" aria-label="View larger photo">' : '') +
+                '<div class="review-stars" aria-label="' + rating + ' out of 5 stars">' + starString(rating) + '</div>' +
+                '<p class="review-text">"' + escapeHtml(r.comment) + '"</p>' +
+                '<p class="review-name">' + escapeHtml(r.name) + (dateLabel ? ' <span class="review-date">· ' + dateLabel + '</span>' : '') + '</p>' +
+                '</div>';
+
+            cardIndex++;
+
+        });
+
+        reviewsGrid.innerHTML = html;
+
+        // Reuse the site's existing single-photo lightbox for review photos
+        Array.prototype.slice.call(reviewsGrid.querySelectorAll('.review-photo')).forEach(function (img) {
+
+            function openThisPhoto() {
+                if (window.openSingleImageLightbox) window.openSingleImageLightbox(img.getAttribute('src'));
+            }
+
+            img.addEventListener('click', openThisPhoto);
+            img.addEventListener('keydown', function (e) {
+                if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    openThisPhoto();
+                }
+            });
+
+        });
+
+        if (reviewsSummary) {
+
+            const avg = total / snapshot.size;
+            reviewsSummaryScore.textContent = avg.toFixed(1);
+            reviewsSummaryStars.textContent = starString(avg);
+            reviewsSummaryCount.textContent = 'Based on ' + snapshot.size + (snapshot.size === 1 ? ' review' : ' reviews');
+
+        }
+
+    }).catch(function () {
+        showEmptyState();
+        if (reviewsSummaryCount) reviewsSummaryCount.textContent = 'Reviews could not be loaded right now.';
+    });
 
 });
 
