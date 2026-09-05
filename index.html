@@ -496,7 +496,20 @@
 
             </div>
 
-            <p class="home-service-note">Simply send us your location and preferred schedule so we can check availability and provide the transportation fee details.</p>
+            <div class="home-service-pricing">
+
+                <p class="home-service-pricing-headline">A minimum service amount of ₱1,500 is required for home service bookings.</p>
+
+                <p class="home-service-pricing-label">Additional Charges</p>
+
+                <ul class="home-service-pricing-list">
+                    <li><span>Home Service Fee</span><strong>₱300</strong></li>
+                    <li><span>Transport Fee</span><strong>Angkas fare (to and from the location)</strong></li>
+                </ul>
+
+            </div>
+
+            <p class="home-service-reassurance">Simply send us your location and preferred schedule so we can check availability and provide the transportation fee details.</p>
 
             <a href="#services" class="btn-outline center-btn home-service-cta">Book Home Service</a>
 
@@ -871,7 +884,7 @@
 
                         <div class="home-service-note">
                             <span>📌</span>
-                            <p>Home service requires a <strong>minimum of 2–3 persons (or more)</strong>. The <strong>client shoulders the transportation/shipping fee</strong>, to be settled directly with the artist.</p>
+                            <p>Home service requires a <strong>minimum of 2–3 persons (or more)</strong> and a <strong>minimum service amount of ₱1,500</strong>. Additional charges: <strong>Home Service Fee – ₱300</strong> and <strong>Transport Fee – Angkas fare</strong> (to and from the location), both shouldered by the client.</p>
                         </div>
 
                         <label>Home Address</label>
@@ -965,19 +978,56 @@
 
                         <button type="button" id="paymentBackBtn" class="payment-back">← Back to form</button>
 
-                        <h3>Scan to Pay ₱100</h3>
-                        <p class="payment-sub">Send exactly ₱100 via GCash to secure your slot</p>
+                        <h3 class="payment-main-heading">Secure Your Appointment</h3>
+                        <p class="payment-main-sub">Complete your ₱100 reservation payment to secure your selected date and time.</p>
 
-                        <div class="payment-qr">
-                            <img src="images/gcash-qr.jpg" alt="GCash QR code">
+                        <div class="payment-steps" aria-hidden="true">
+                            <div class="payment-step-item is-done"><span>01</span>Review Booking</div>
+                            <div class="payment-step-item is-current"><span>02</span>Pay ₱100</div>
+                            <div class="payment-step-item"><span>03</span>Send Confirmation</div>
                         </div>
 
-                        <p class="payment-number">GCash Number: <strong>0961 405 5400</strong></p>
+                        <div class="payment-qr-card">
+
+                            <h4>Scan to Pay ₱100</h4>
+                            <p class="payment-sub">Send exactly ₱100 via GCash to secure your appointment.</p>
+
+                            <div class="payment-qr">
+                                <img src="images/gcash-qr.jpg" alt="GCash QR code" id="paymentQrImg">
+                            </div>
+
+                            <a href="images/gcash-qr.jpg" download="NailXTaytay-GCash-QR.jpg" class="payment-qr-download-btn">
+                                <svg viewBox="0 0 24 24" width="14" height="14"><path fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" d="M12 4v11m0 0 4-4m-4 4-4-4M5 19h14"/></svg>
+                                Download QR Code
+                            </a>
+
+                            <p class="payment-qr-hint">Having trouble scanning? Download the QR, then use "Scan QR" &rarr; upload from gallery inside your GCash app.</p>
+
+                        </div>
+
+                        <div class="payment-gcash-card">
+
+                            <p class="payment-gcash-card-title">GCash Payment Details</p>
+
+                            <div class="payment-gcash-row">
+                                <span>GCash Number</span>
+                                <strong>0961 405 5400</strong>
+                            </div>
+
+                            <div class="payment-gcash-row">
+                                <span>Account Name</span>
+                                <strong>RA**L A.</strong>
+                            </div>
+
+                            <p class="payment-verify-note">Please confirm that the account details match before sending your payment.</p>
+
+                        </div>
 
                         <button type="button" id="confirmPaymentBtn" class="btn-primary modal-pay-btn">
+                            <span class="btn-spinner" aria-hidden="true"></span>
                             <span class="pay-btn-text">
-                                <span>I've Sent the Payment</span>
-                                <small>Notify Nail X Taytay on Messenger</small>
+                                <span id="confirmPaymentBtnLabel">I've Sent the Payment</span>
+                                <small id="confirmPaymentBtnSubLabel">Notify Nail X Taytay on Messenger</small>
                             </span>
                         </button>
 
@@ -988,7 +1038,10 @@
                             </span>
                         </button>
 
-                        <p class="modal-secure-note">Your appointment is confirmed once we verify your payment.</p>
+                        <p class="modal-secure-note">
+                            <svg viewBox="0 0 24 24" width="12" height="12"><path fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" d="M20 6 9 17l-5-5"/></svg>
+                            Your appointment will be confirmed once we verify your payment.
+                        </p>
 
                     </div>
 

@@ -1179,13 +1179,77 @@ img{
     margin:0;
 }
 
-.home-service-note{
+.home-service-reassurance{
     font-size:13px;
     font-style:italic;
     line-height:1.6;
     color:#8A6E60;
     max-width:460px;
     margin:0 auto 30px;
+}
+
+.home-service-pricing{
+    background:#FDF6EC;
+    border:1px solid rgba(212,162,90,.35);
+    border-radius:16px;
+    padding:22px 26px;
+    text-align:left;
+    margin-bottom:28px;
+}
+
+.home-service-pricing-headline{
+    font-size:14px;
+    font-weight:700;
+    color:#7A1E32;
+    margin:0 0 14px;
+    line-height:1.5;
+}
+
+.home-service-pricing-label{
+    font-size:11px;
+    font-weight:600;
+    letter-spacing:1px;
+    text-transform:uppercase;
+    color:#B8824F;
+    margin:0 0 10px;
+}
+
+.home-service-pricing-list{
+    list-style:none;
+    padding:0;
+    margin:0;
+}
+
+.home-service-pricing-list li{
+    display:flex;
+    align-items:baseline;
+    justify-content:space-between;
+    gap:16px;
+    font-size:13.5px;
+    color:#5C4038;
+    padding:8px 0;
+    border-top:1px solid rgba(212,162,90,.25);
+}
+
+.home-service-pricing-list li:first-child{
+    border-top:none;
+}
+
+.home-service-pricing-list li strong{
+    color:#2A1A1A;
+    font-weight:700;
+    text-align:right;
+    flex-shrink:0;
+}
+
+@media(max-width:480px){
+    .home-service-pricing-list li{
+        flex-direction:column;
+        gap:2px;
+    }
+    .home-service-pricing-list li strong{
+        text-align:left;
+    }
 }
 
 .home-service-cta{
@@ -4475,23 +4539,107 @@ img{
 
     cursor:pointer;
 
-    margin-bottom:16px;
+    margin-bottom:20px;
 
     padding:0;
+
+    transition:transform .2s ease;
 
 }
 
 .payment-back:hover{
 
     text-decoration:underline;
+    transform:translateX(-2px);
 
 }
 
-.payment-step h3{
+.payment-main-heading{
+    font-family:'Playfair Display', serif;
+    font-size:24px;
+    color:#7A1E32;
+    margin:0 0 6px;
+}
 
-    font-size:22px;
+.payment-main-sub{
+    font-size:13.5px;
+    line-height:1.6;
+    color:#5C4038;
+    max-width:340px;
+    margin:0 0 24px;
+}
 
-    margin-bottom:6px;
+.payment-steps{
+    display:flex;
+    align-items:center;
+    gap:6px;
+    margin-bottom:28px;
+}
+
+.payment-step-item{
+    display:flex;
+    align-items:center;
+    gap:6px;
+    font-size:10.5px;
+    font-weight:600;
+    letter-spacing:.3px;
+    color:#C9B8AE;
+    white-space:nowrap;
+}
+
+.payment-step-item span{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    width:18px;
+    height:18px;
+    border-radius:50%;
+    background:#F1E4D8;
+    color:#B8824F;
+    font-size:9px;
+}
+
+.payment-step-item.is-done{
+    color:#B8824F;
+}
+
+.payment-step-item.is-done span{
+    background:rgba(212,162,90,.25);
+    color:#B8824F;
+}
+
+.payment-step-item.is-current{
+    color:#7A1E32;
+}
+
+.payment-step-item.is-current span{
+    background:#7A1E32;
+    color:#fff;
+}
+
+.payment-step-item:not(:last-child)::after{
+    content:'';
+    width:16px;
+    height:1px;
+    background:#E8D5C4;
+    margin:0 2px;
+}
+
+@media(max-width:480px){
+
+    .payment-steps{
+        flex-wrap:wrap;
+        justify-content:center;
+        row-gap:8px;
+    }
+
+    .payment-step-item{
+        font-size:9.5px;
+    }
+
+    .payment-step-item:not(:last-child)::after{
+        width:10px;
+    }
 
 }
 
@@ -4505,11 +4653,35 @@ img{
 
 }
 
+.payment-qr-card{
+    width:100%;
+    max-width:320px;
+    background:#FFFBF6;
+    border:1px solid rgba(212,162,90,.3);
+    border-radius:20px;
+    padding:26px 22px;
+    margin-bottom:22px;
+    box-shadow:0 15px 40px rgba(125,32,58,.06);
+}
+
+.payment-qr-card h4{
+    font-family:'Playfair Display', serif;
+    font-size:19px;
+    color:#2A1A1A;
+    margin:0 0 6px;
+}
+
+.payment-qr-card .payment-sub{
+    margin-bottom:20px;
+}
+
 .payment-qr{
 
-    width:220px;
+    width:100%;
 
-    height:220px;
+    max-width:220px;
+
+    aspect-ratio:1 / 1;
 
     border-radius:18px;
 
@@ -4519,7 +4691,11 @@ img{
 
     box-shadow:0 15px 35px rgba(122,30,50,.1);
 
-    margin-bottom:16px;
+    margin:0 auto 16px;
+
+    background:#fff;
+
+    padding:10px;
 
 }
 
@@ -4529,24 +4705,124 @@ img{
 
     height:100%;
 
-    object-fit:cover;
+    object-fit:contain;
 
 }
 
-.payment-number{
-
-    font-size:14px;
-
-    color:#3A2624;
-
-    margin-bottom:22px;
-
-}
-
-.payment-number strong{
-
+.payment-qr-download-btn{
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+    font-size:12px;
+    font-weight:600;
     color:#7A1E32;
+    background:#FBF3EA;
+    border:1px solid rgba(212,162,90,.5);
+    border-radius:999px;
+    padding:7px 16px;
+    margin-bottom:12px;
+    text-decoration:none;
+    transition:background .2s ease, border-color .2s ease, transform .2s ease;
+}
 
+.payment-qr-download-btn:hover{
+    background:#F3E4D2;
+    border-color:#D4A25A;
+    transform:translateY(-1px);
+}
+
+.payment-qr-hint{
+    font-size:11.5px;
+    line-height:1.5;
+    color:#8A6E60;
+    margin:0;
+}
+
+.payment-gcash-card{
+    width:100%;
+    background:#FBF7F3;
+    border:1px solid #E8DDD6;
+    border-radius:16px;
+    padding:20px 22px;
+    margin-bottom:24px;
+    text-align:left;
+}
+
+.payment-gcash-card-title{
+    font-size:11px;
+    font-weight:700;
+    letter-spacing:.6px;
+    text-transform:uppercase;
+    color:#B8824F;
+    margin:0 0 14px;
+}
+
+.payment-gcash-row{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+    padding:9px 0;
+    border-top:1px solid rgba(212,162,90,.25);
+}
+
+.payment-gcash-row:first-of-type{
+    border-top:none;
+}
+
+.payment-gcash-row span{
+    font-size:12.5px;
+    color:#8A6E60;
+}
+
+.payment-gcash-row strong{
+    font-size:15px;
+    font-weight:700;
+    color:#7A1E32;
+}
+
+.payment-verify-note{
+    font-size:11.5px;
+    line-height:1.5;
+    color:#8A6E60;
+    margin:14px 0 0;
+    padding-top:12px;
+    border-top:1px solid rgba(212,162,90,.25);
+}
+
+/* ---- loading state (prevents accidental double submission) ---- */
+.btn-spinner{
+    display:none;
+    width:16px;
+    height:16px;
+    border:2px solid rgba(255,255,255,.4);
+    border-top-color:#fff;
+    border-radius:50%;
+    margin-right:8px;
+    animation:paymentSpin .7s linear infinite;
+}
+
+.modal-pay-btn.is-loading .btn-spinner{
+    display:inline-block;
+}
+
+.modal-pay-btn.is-loading{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+}
+
+.modal-pay-btn:disabled{
+    opacity:.75;
+    cursor:not-allowed;
+}
+
+@keyframes paymentSpin{
+    to{ transform:rotate(360deg); }
+}
+
+@media (prefers-reduced-motion: reduce){
+    .btn-spinner{ animation:none; }
 }
 
 

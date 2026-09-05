@@ -1204,6 +1204,15 @@ document.addEventListener('DOMContentLoaded', function () {
         pendingServiceIndex = 0;
         resetApptPicker();
 
+        if (confirmPaymentBtn) {
+            confirmPaymentBtn.disabled = false;
+            confirmPaymentBtn.classList.remove('is-loading');
+            const labelEl = document.getElementById('confirmPaymentBtnLabel');
+            const subLabelEl = document.getElementById('confirmPaymentBtnSubLabel');
+            if (labelEl) labelEl.textContent = "I've Sent the Payment";
+            if (subLabelEl) subLabelEl.textContent = 'Notify Nail X Taytay on Messenger';
+        }
+
         if (inspoPreviewList) inspoPreviewList.innerHTML = '';
         if (inspoUploadLabel) inspoUploadLabel.textContent = 'Choose photos';
 
@@ -2109,6 +2118,21 @@ document.addEventListener('DOMContentLoaded', function () {
 
         confirmPaymentBtn.addEventListener('click', function () {
 
+            if (confirmPaymentBtn.disabled) return; // already processing -- ignore repeat clicks
+            confirmPaymentBtn.disabled = true;
+            confirmPaymentBtn.classList.add('is-loading');
+            const confirmPaymentBtnLabelEl = document.getElementById('confirmPaymentBtnLabel');
+            const confirmPaymentBtnSubLabelEl = document.getElementById('confirmPaymentBtnSubLabel');
+            if (confirmPaymentBtnLabelEl) confirmPaymentBtnLabelEl.textContent = 'Processing...';
+            if (confirmPaymentBtnSubLabelEl) confirmPaymentBtnSubLabelEl.textContent = 'Please wait a moment';
+
+            function resetConfirmPaymentBtn() {
+                confirmPaymentBtn.disabled = false;
+                confirmPaymentBtn.classList.remove('is-loading');
+                if (confirmPaymentBtnLabelEl) confirmPaymentBtnLabelEl.textContent = "I've Sent the Payment";
+                if (confirmPaymentBtnSubLabelEl) confirmPaymentBtnSubLabelEl.textContent = 'Notify Nail X Taytay on Messenger';
+            }
+
             const selectedService = SERVICES[parseInt(serviceSelect.value, 10)];
             const name = document.getElementById('bookingName').value || '(not provided)';
             const contact = document.getElementById('bookingContact').value || '(not provided)';
@@ -2208,6 +2232,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
                     if (err && err.code === 'SLOT_TAKEN') {
                         alert("Sorry, this time slot was just booked by someone else. Please pick another time.");
+                        resetConfirmPaymentBtn();
                         loadAvailability();
                         resetApptPicker();
                         closeModal();
