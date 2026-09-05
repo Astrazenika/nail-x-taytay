@@ -458,6 +458,51 @@
 
     </section>
 
+    <!-- ===========================
+            HOME SERVICE SECTION
+    ============================ -->
+
+    <section class="home-service-section">
+
+        <div class="home-service-card lux-reveal">
+
+            <span class="home-service-label">Home Service</span>
+
+            <h3>Beautiful Nails, In the Comfort of Your Home</h3>
+
+            <p class="home-service-lead">Prefer to have your nails done at home? Our nail artist can come to you for a convenient and relaxing nail experience.</p>
+
+            <div class="home-service-features">
+
+                <div class="home-service-feature">
+                    <span class="home-service-feature-icon">
+                        <svg viewBox="0 0 24 24" width="20" height="20"><path fill="none" stroke="currentColor" stroke-width="1.5" d="M7.5 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM16.5 11a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5z"/><path fill="none" stroke="currentColor" stroke-width="1.5" d="M2 19c0-2.8 2.5-5 5.5-5S13 16.2 13 19M13 19.5c0-2.5 2.2-4.5 5-4.5s5 2 5 4.5"/></svg>
+                    </span>
+                    <div class="home-service-feature-text">
+                        <p class="home-service-feature-title">2–3 Clients or More</p>
+                        <p class="home-service-feature-desc">Home service is available for a minimum of 2–3 clients or more in the same location, making the visit convenient and worthwhile for everyone.</p>
+                    </div>
+                </div>
+
+                <div class="home-service-feature">
+                    <span class="home-service-feature-icon">
+                        <svg viewBox="0 0 24 24" width="20" height="20"><path fill="none" stroke="currentColor" stroke-width="1.5" d="M12 21s7-6.5 7-11.5A7 7 0 0 0 5 9.5C5 14.5 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.3" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>
+                    </span>
+                    <div class="home-service-feature-text">
+                        <p class="home-service-feature-title">Transportation Fee</p>
+                        <p class="home-service-feature-desc">The transportation fee is shouldered by the client and will be discussed based on the service location before booking.</p>
+                    </div>
+                </div>
+
+            </div>
+
+            <p class="home-service-note">Simply send us your location and preferred schedule so we can check availability and provide the transportation fee details.</p>
+
+            <a href="#services" class="btn-outline center-btn home-service-cta">Book Home Service</a>
+
+        </div>
+
+    </section>
 
     <!-- ===========================
             PRICING SECTION
@@ -594,13 +639,13 @@
             <!-- Reviews are inserted here by script.js -->
         </div>
 
-        <a href="review.html" class="btn-primary center-btn reviews-cta">Rate Your Experience</a>
+        <a href="review/" class="btn-primary center-btn reviews-cta">Rate Your Experience</a>
 
         <div class="reviews-share-wrap">
             <p class="reviews-share-label">Share This Review Page</p>
             <div class="reviews-share-link">
                 <svg class="reviews-share-link-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M9 15l6-6M10 7l1-1a4 4 0 015.66 5.66l-1.4 1.4M14 17l-1 1a4 4 0 01-5.66-5.66l1.4-1.4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
-                <span id="reviewsShareLinkText">https://astrazenika.github.io/nail-x-taytay/review.html</span>
+                <span id="reviewsShareLinkText">https://astrazenika.github.io/nail-x-taytay/review/</span>
                 <button type="button" id="reviewsShareLinkCopyBtn">Copy Link</button>
             </div>
         </div>
@@ -813,6 +858,34 @@
                     <div class="input-icon-wrap">
                         <svg viewBox="0 0 24 24" width="16" height="16"><path fill="none" stroke="currentColor" stroke-width="1.5" d="M9 2h6v3l1.5 2v13a1 1 0 0 1-1 1h-7a1 1 0 0 1-1-1V7L9 5V2z"/></svg>
                         <select id="serviceSelect"></select>
+                    </div>
+
+                    <label>Service Location</label>
+                    <div class="location-toggle" id="locationToggle">
+                        <button type="button" class="location-toggle-btn is-active" data-location="studio">🏠 At My Studio</button>
+                        <button type="button" class="location-toggle-btn" data-location="home">🚗 Home Service</button>
+                    </div>
+                    <input type="hidden" id="serviceLocationInput" value="studio">
+
+                    <div class="home-service-fields" id="homeServiceFields" hidden>
+
+                        <div class="home-service-note">
+                            <span>📌</span>
+                            <p>Home service requires a <strong>minimum of 2–3 persons (or more)</strong>. The <strong>client shoulders the transportation/shipping fee</strong>, to be settled directly with the artist.</p>
+                        </div>
+
+                        <label>Home Address</label>
+                        <div class="input-icon-wrap textarea-wrap">
+                            <svg viewBox="0 0 24 24" width="16" height="16"><path fill="none" stroke="currentColor" stroke-width="1.5" d="M12 21s7-6.5 7-11.5A7 7 0 0 0 5 9.5C5 14.5 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.3" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>
+                            <textarea rows="2" id="homeServiceAddress" placeholder="Complete address where the service will be done"></textarea>
+                        </div>
+
+                        <label>Number of Persons</label>
+                        <div class="input-icon-wrap">
+                            <svg viewBox="0 0 24 24" width="16" height="16"><path fill="none" stroke="currentColor" stroke-width="1.5" d="M8 12a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7zM16 12a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM2 20c0-3 3-5 6-5s6 2 6 5M14 15c2.5 0 6 1.7 6 5"/></svg>
+                            <input type="number" id="homeServicePersons" min="2" placeholder="Minimum of 2">
+                        </div>
+
                     </div>
 
                     <label>Full Name</label>
@@ -1337,6 +1410,18 @@
                         <div class="admin-detail-row">
                             <span class="admin-detail-label">Service</span>
                             <span class="admin-detail-value" id="detailService">—</span>
+                        </div>
+                        <div class="admin-detail-row">
+                            <span class="admin-detail-label">Location</span>
+                            <span class="admin-detail-value" id="detailLocation">—</span>
+                        </div>
+                        <div class="admin-detail-row" id="detailAddressRow" hidden>
+                            <span class="admin-detail-label">Address</span>
+                            <span class="admin-detail-value" id="detailAddress">—</span>
+                        </div>
+                        <div class="admin-detail-row" id="detailPersonsRow" hidden>
+                            <span class="admin-detail-label">No. of Persons</span>
+                            <span class="admin-detail-value" id="detailPersons">—</span>
                         </div>
                         <div class="admin-detail-row">
                             <span class="admin-detail-label">Price</span>

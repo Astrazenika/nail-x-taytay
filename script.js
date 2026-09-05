@@ -104,9 +104,61 @@ document.addEventListener('DOMContentLoaded', function () {
     function openModal(index) {
 
         applyService(index);
+        resetLocationToggle();
 
         modal.classList.add('open');
         document.body.style.overflow = 'hidden';
+
+    }
+
+    // ===============================
+    // HOME SERVICE TOGGLE -- lets the customer choose between coming to
+    // the studio or having the artist travel to them. Home Service shows
+    // extra required fields (address, number of persons) and a note
+    // about the minimum group size and who covers the transport fee.
+    // ===============================
+    const locationToggle = document.getElementById('locationToggle');
+    const serviceLocationInput = document.getElementById('serviceLocationInput');
+    const homeServiceFields = document.getElementById('homeServiceFields');
+    const homeServiceAddress = document.getElementById('homeServiceAddress');
+    const homeServicePersons = document.getElementById('homeServicePersons');
+
+    function setServiceLocation(location) {
+
+        serviceLocationInput.value = location;
+
+        Array.prototype.slice.call(locationToggle.querySelectorAll('.location-toggle-btn')).forEach(function (btn) {
+            btn.classList.toggle('is-active', btn.dataset.location === location);
+        });
+
+        const isHome = location === 'home';
+        homeServiceFields.hidden = !isHome;
+
+        if (homeServiceAddress) {
+            if (isHome) homeServiceAddress.setAttribute('required', 'required');
+            else homeServiceAddress.removeAttribute('required');
+        }
+
+        if (homeServicePersons) {
+            if (isHome) homeServicePersons.setAttribute('required', 'required');
+            else homeServicePersons.removeAttribute('required');
+        }
+
+    }
+
+    function resetLocationToggle() {
+        setServiceLocation('studio');
+        if (homeServiceAddress) homeServiceAddress.value = '';
+        if (homeServicePersons) homeServicePersons.value = '';
+    }
+
+    if (locationToggle) {
+
+        Array.prototype.slice.call(locationToggle.querySelectorAll('.location-toggle-btn')).forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                setServiceLocation(btn.dataset.location);
+            });
+        });
 
     }
 
@@ -1146,6 +1198,7 @@ document.addEventListener('DOMContentLoaded', function () {
         closeModal();
         bookingForm.reset();
         applyService(0);
+        resetLocationToggle();
         paymentStep.classList.remove('active');
         if (bookingSuccessStep) bookingSuccessStep.classList.remove('active');
         pendingServiceIndex = 0;
@@ -1967,6 +2020,9 @@ document.addEventListener('DOMContentLoaded', function () {
             const date = document.getElementById('bookingDate').value || '(not provided)';
             const time = document.getElementById('bookingTime').value || '(not provided)';
             const notes = document.getElementById('bookingNotes').value || '(none)';
+            const serviceLocation = serviceLocationInput ? serviceLocationInput.value : 'studio';
+            const homeAddress = homeServiceAddress ? homeServiceAddress.value : '';
+            const homePersons = homeServicePersons ? homeServicePersons.value : '';
 
             const message =
                 "Hi! I'd like to book an appointment — can we arrange the details and payment here?\n\n" +
@@ -1975,6 +2031,9 @@ document.addEventListener('DOMContentLoaded', function () {
                 'Contact Number: ' + contact + '\n' +
                 'Preferred Date: ' + date + '\n' +
                 'Preferred Time: ' + time + '\n' +
+                (serviceLocation === 'home'
+                    ? 'Service Location: Home Service\nAddress: ' + (homeAddress || '(not provided)') + '\nNumber of Persons: ' + (homePersons || '(not provided)') + '\n'
+                    : 'Service Location: At the Studio\n') +
                 'Notes: ' + notes;
 
             let savedBookingId = null;
@@ -2009,7 +2068,10 @@ document.addEventListener('DOMContentLoaded', function () {
                         notes: notes,
                         price: (selectedService && typeof selectedService.price === 'number') ? selectedService.price : null,
                         status: 'Pending',
-                        referredBy: validReferrer
+                        referredBy: validReferrer,
+                        serviceLocation: serviceLocation,
+                        homeAddress: serviceLocation === 'home' ? homeAddress : null,
+                        numberOfPersons: serviceLocation === 'home' ? homePersons : null
                     });
 
                 }).then(function (bookingId) {
@@ -2054,6 +2116,9 @@ document.addEventListener('DOMContentLoaded', function () {
             const time = document.getElementById('bookingTime').value || '(not provided)';
             const notes = document.getElementById('bookingNotes').value || '(none)';
             const inspoFiles = inspoPhotoInput ? Array.prototype.slice.call(inspoPhotoInput.files) : [];
+            const serviceLocation = serviceLocationInput ? serviceLocationInput.value : 'studio';
+            const homeAddress = homeServiceAddress ? homeServiceAddress.value : '';
+            const homePersons = homeServicePersons ? homeServicePersons.value : '';
 
             const message =
                 'Hi! I just paid the ₱100 reservation fee for a booking.\n\n' +
@@ -2062,6 +2127,9 @@ document.addEventListener('DOMContentLoaded', function () {
                 'Contact Number: ' + contact + '\n' +
                 'Date: ' + date + '\n' +
                 'Time: ' + time + '\n' +
+                (serviceLocation === 'home'
+                    ? 'Service Location: Home Service\nAddress: ' + (homeAddress || '(not provided)') + '\nNumber of Persons: ' + (homePersons || '(not provided)') + '\n'
+                    : 'Service Location: At the Studio\n') +
                 'Notes: ' + notes + '\n\n' +
                 'Here is my payment screenshot' + (inspoFiles.length ? ' and design inspo photo(s)' : '') + ':';
 
@@ -2124,7 +2192,10 @@ document.addEventListener('DOMContentLoaded', function () {
                         notes: notes,
                         price: (selectedService && typeof selectedService.price === 'number') ? selectedService.price : null,
                         status: 'Pending',
-                        referredBy: validReferrer
+                        referredBy: validReferrer,
+                        serviceLocation: serviceLocation,
+                        homeAddress: serviceLocation === 'home' ? homeAddress : null,
+                        numberOfPersons: serviceLocation === 'home' ? homePersons : null
                     });
 
                 }).then(function (bookingId) {
@@ -2242,7 +2313,8 @@ document.addEventListener('DOMContentLoaded', function () {
         '.about-text',
         '.pricing-card',
         '.review-card',
-        '.footer-item'
+        '.footer-item',
+        '.home-service-card'
     ];
 
     const revealEls = document.querySelectorAll(revealSelectors.join(','));
@@ -2787,6 +2859,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 '<span class="admin-row-name-cell">' +
                 '<span class="admin-row-status-dot admin-status-' + b.status + '"></span>' +
                 '<span>' + b.name + '</span>' +
+                (b.serviceLocation === 'home' ? '<span class="admin-row-home-badge" title="Home Service booking">🚗 Home</span>' : '') +
                 (isNext ? '<span class="admin-row-next-badge" title="This is the next upcoming appointment">⚠ Next</span>' : '') +
                 '</span>' +
                 '</td>' +
@@ -2977,6 +3050,23 @@ document.addEventListener('DOMContentLoaded', function () {
         document.getElementById('detailDate').textContent = formatBookingDate(b.date);
         document.getElementById('detailTime').textContent = formatBookingTime(b.time);
         document.getElementById('detailService').textContent = b.service;
+
+        const isHomeService = b.serviceLocation === 'home';
+        document.getElementById('detailLocation').textContent = isHomeService ? '🚗 Home Service' : '🏠 At the Studio';
+
+        const addressRow = document.getElementById('detailAddressRow');
+        const personsRow = document.getElementById('detailPersonsRow');
+
+        if (addressRow) {
+            addressRow.hidden = !isHomeService;
+            if (isHomeService) document.getElementById('detailAddress').textContent = b.homeAddress || '(not provided)';
+        }
+
+        if (personsRow) {
+            personsRow.hidden = !isHomeService;
+            if (isHomeService) document.getElementById('detailPersons').textContent = b.numberOfPersons || '(not provided)';
+        }
+
         document.getElementById('detailReferredBy').textContent = b.referredBy || '—';
         document.getElementById('detailNotes').textContent = b.notes || '(none)';
 
